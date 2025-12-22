@@ -6,11 +6,8 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "build": "echo 'No build step required'",
-    "vercel-build": "npm install"
-  },
-  "engines": {
-    "node": ">=14.0.0"
+    "vercel-dev": "vercel dev",
+    "vercel-deploy": "vercel --prod"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -18,5 +15,8 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }
