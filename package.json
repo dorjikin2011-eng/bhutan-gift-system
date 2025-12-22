@@ -1,0 +1,22 @@
+{
+  "name": "bhutan-gift-system",
+  "version": "1.0.0",
+  "description": "Bhutan Gift Transparency System - Compliant with Gift Rules 2017",
+  "main": "server.js",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js",
+    "build": "echo 'No build step required'",
+    "vercel-build": "npm install"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bhutan Gift Transparency System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <i class="fas fa-gift"></i>
+                <div>
+                    <h1>BGTS <small>Bhutan Gift Transparency System</small></h1>
+                </div>
+            </div>
+            <div class="user-menu">
+                <div class="avatar">TS</div>
+                <div>
+                    <div style="font-weight: 500;">Tashi Sherpa</div>
+                    <div style="font-size: 0.8rem; opacity: 0.9;">Public Servant</div>
+                </div>
+                <i class="fas fa-bell notification-icon">
+                    <span class="notification-badge">3</span>
+                </i>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Navigation -->
+    <div class="nav-tabs">
+        <a href="#" class="nav-tab active" data-page="dashboard">
+            <i class="fas fa-home"></i> Dashboard
+        </a>
+        <a href="#" class="nav-tab" data-page="declare">
+            <i class="fas fa-plus-circle"></i> Declare Gift
+        </a>
+        <a href="#" class="nav-tab" data-page="my-gifts">
+            <i class="fas fa-gifts"></i> My Gifts
+        </a>
+        <a href="#" class="nav-tab" data-page="review">
+            <i class="fas fa-clipboard-check"></i> Review Gifts
+        </a>
+        <a href="#" class="nav-tab" data-page="register">
+            <i class="fas fa-book"></i> Gift Register
+        </a>
+        <a href="#" class="nav-tab" data-page="penalties">
+            <i class="fas fa-exclamation-triangle"></i> Penalties
+        </a>
+        <a href="#" class="nav-tab" data-page="knowledge">
+            <i class="fas fa-info-circle"></i> Guidance
+        </a>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="container main-content">
+        <!-- Dashboard Page -->
+        <div id="dashboard" class="page active">
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <i class="fas fa-gift"></i>
+                    <div class="stat-value">7</div>
+                    <div class="stat-label">Gifts Declared</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-clock"></i>
+                    <div class="stat-value">2</div>
+                    <div class="stat-label">Pending Review</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-check-circle"></i>
+                    <div class="stat-value">4</div>
+                    <div class="stat-label">Approved</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div class="stat-value">1</div>
+                    <div class="stat-label">Returned</div>
+                </div>
+            </div>
+            
+            <div class="quick-actions">
+                <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+                <div class="action-buttons">
+                    <a href="#" class="action-btn" data-page="declare">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Declare New Gift</span>
+                    </a>
+                    <a href="#" class="action-btn" data-page="my-gifts">
+                        <i class="fas fa-history"></i>
+                        <span>View My Declarations</span>
+                    </a>
+                    <a href="#" class="action-btn" data-page="knowledge">
+                        <i class="fas fa-question-circle"></i>
+                        <span>Gift Rules Guide</span>
+                    </a>
+                    <a href="#" class="action-btn" id="check-prohibited-btn">
+                        <i class="fas fa-ban"></i>
+                        <span>Check Prohibited Source</span>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="recent-activity">
+                <h3><i class="fas fa-history"></i> Recent Activity</h3>
+                <ul class="activity-list">
+                    <li class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-gift"></i>
+                        </div>
+                        <div class="activity-details">
+                            <h4>Gift Declared</h4>
+                            <p>Traditional Thanka painting from local artist</p>
+                        </div>
+                        <div class="activity-time">2 hours ago</div>
+                    </li>
+                    <li class="activity-item">
+                        <div class="activity-icon approved">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="activity-details">
+                            <h4>Gift Approved</h4>
+                            <p>Book gift from immediate relative</p>
+                        </div>
+                        <div class="activity-time">1 day ago</div>
+                    </li>
+                    <li class="activity-item">
+                        <div class="activity-icon returned">
+                            <i class="fas fa-undo"></i>
+                        </div>
+                        <div class="activity-details">
+                            <h4>Gift Returned</h4>
+                            <p>Watch from contractor - prohibited source</p>
+                        </div>
+                        <div class="activity-time">3 days ago</div>
+                    </li>
+                    <li class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <div class="activity-details">
+                            <h4>Reminder</h4>
+                            <p>24-hour declaration deadline approaching</p>
+                        </div>
+                        <div class="activity-time">5 days ago</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Declare Gift Page -->
+        <div id="declare" class="page">
+            <div class="form-container">
+                <h2 class="form-title"><i class="fas fa-plus-circle"></i> Declare New Gift</h2>
+                <p class="declaration-warning">
+                    <i class="fas fa-exclamation-circle"></i> Remember: You must declare gifts within 24 hours of receipt (Rule 27)
+                </p>
+                
+                <form id="gift-declaration-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="gift-description">Gift Description *</label>
+                            <textarea class="form-control" id="gift-description" rows="3" placeholder="Describe the gift in detail" required></textarea>
+                            <div class="form-help">Be specific about type, brand, material, etc.</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="gift-value">Estimated Fair Market Value (Nu.) *</label>
+                            <input type="number" class="form-control" id="gift-value" min="0" step="0.01" placeholder="0.00" required>
+                            <div class="form-help">Based on retail cost of similar item (Rule 47(e))</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="receipt-date">Date of Receipt *</label>
+                            <input type="datetime-local" class="form-control" id="receipt-date" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="gift-type">Gift Type</label>
+                            <select class="form-control" id="gift-type">
+                                <option value="">Select type</option>
+                                <option value="cash">Cash</option>
+                                <option value="item">Physical Item</option>
+                                <option value="voucher">Gift Voucher</option>
+                                <option value="experience">Experience/Hospitality</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <h3 class="section-title">Gift Giver Information</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="giver-name">Giver's Name *</label>
+                            <input type="text" class="form-control" id="giver-name" placeholder="Full name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="giver-designation">Giver's Designation</label>
+                            <input type="text" class="form-control" id="giver-designation" placeholder="Job title/position">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="giver-agency">Giver's Agency/Organization</label>
+                            <input type="text" class="form-control" id="giver-agency" placeholder="Company/Organization name">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="relationship">Relationship with Giver *</label>
+                            <select class="form-control" id="relationship" required>
+                                <option value="">Select relationship</option>
+                                <option value="immediate-relative">Immediate Relative (Rule 47(l))</option>
+                                <option value="personal-friend">Personal Friend</option>
+                                <option value="colleague">Colleague/Public Servant</option>
+                                <option value="business">Business Associate</option>
+                                <option value="contractor">Contractor/Service Provider</option>
+                                <option value="foreign">Foreign Government</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="giver-address">Giver's Address/Contact</label>
+                        <input type="text" class="form-control" id="giver-address" placeholder="Address, phone, or email">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="circumstances">Circumstances of Gift Acceptance *</label>
+                        <textarea class="form-control" id="circumstances" rows="3" placeholder="Explain why you accepted the gift and the context" required></textarea>
+                        <div class="form-help">Describe the occasion and why it's permissible under Gift Rules (Rule 11, 14)</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="disposition">Current Disposition/Location of Gift *</label>
+                        <textarea class="form-control" id="disposition" rows="2" placeholder="Where is the gift currently kept?" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="prohibited-check">
+                            <label for="prohibited-check">Check if giver is a prohibited source (Rule 8)</label>
+                        </div>
+                        <div class="form-help">Prohibited sources include those seeking official action, doing business with your agency, or regulated by your agency.</div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="save-draft-btn">
+                            <i class="fas fa-save"></i> Save as Draft
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Submit Declaration
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- My Gifts Page -->
+        <div id="my-gifts" class="page">
+            <div class="form-container">
+                <h2 class="form-title"><i class="fas fa-gifts"></i> My Gift Declarations</h2>
+                
+                <div class="filter-buttons">
+                    <button class="btn btn-secondary filter-btn active" data-filter="all">All</button>
+                    <button class="btn btn-secondary filter-btn" data-filter="pending">Pending</button>
+                    <button class="btn btn-secondary filter-btn" data-filter="approved">Approved</button>
+                    <button class="btn btn-secondary filter-btn" data-filter="returned">Returned</button>
+                </div>
+                
+                <div class="table-container">
+                    <table class="table" id="my-gifts-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Value (Nu.)</th>
+                                <th>Giver</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr data-status="pending">
+                                <td>2023-10-15</td>
+                                <td>Traditional Thanka painting</td>
+                                <td>5,000</td>
+                                <td>Local Artist</td>
+                                <td><span class="status-badge status-pending">Under Review</span></td>
+                                <td><button class="btn btn-secondary view-gift-btn" style="padding: 5px 10px; font-size: 0.85rem;">View</button></td>
+                            </tr>
+                            <tr data-status="approved">
+                                <td>2023-10-10</td>
+                                <td>Book on Bhutanese Culture</td>
+                                <td>800</td>
+                                <td>Brother (Immediate Relative)</td>
+                                <td><span class="status-badge status-approved">Approved</span></td>
+                                <td><button class="btn btn-secondary view-gift-btn" style="padding: 5px 10px; font-size: 0.85rem;">View</button></td>
+                            </tr>
+                            <tr data-status="returned">
+                                <td>2023-10-05</td>
+                                <td>Watch</td>
+                                <td>15,000</td>
+                                <td>ABC Construction Co.</td>
+                                <td><span class="status-badge status-returned">Returned</span></td>
+                                <td><button class="btn btn-secondary view-gift-btn" style="padding: 5px 10px; font-size: 0.85rem;">View</button></td>
+                            </tr>
+                            <tr data-status="approved">
+                                <td>2023-09-28</td>
+                                <td>Framed Certificate</td>
+                                <td>2,500</td>
+                                <td>Ministry of Education</td>
+                                <td><span class="status-badge status-approved">Approved</span></td>
+                                <td><button class="btn btn-secondary view-gift-btn" style="padding: 5px 10px; font-size: 0.85rem;">View</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Review Gifts Page (GDA/HoA/Committee view) -->
+        <div id="review" class="page">
+            <div class="form-container">
+                <h2 class="form-title"><i class="fas fa-clipboard-check"></i> Gift Review Dashboard</h2>
+                <p class="role-indicator">You are viewing as <strong>Gift Disclosure Administrator (GDA)</strong></p>
+                
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Declarant</th>
+                                <th>Gift Description</th>
+                                <th>Value (Nu.)</th>
+                                <th>Giver</th>
+                                <th>Relationship</th>
+                                <th>Days Left</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Tashi Sherpa</td>
+                                <td>Traditional Thanka painting</td>
+                                <td>5,000</td>
+                                <td>Local Artist</td>
+                                <td>Business Associate</td>
+                                <td><span class="days-left warning">3</span></td>
+                                <td>
+                                    <button class="btn btn-primary review-gift-btn" data-id="1" style="padding: 5px 10px; font-size: 0.85rem;">Review</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Dorji Wangchuk</td>
+                                <td>Conference Bag with Accessories</td>
+                                <td>3,500</td>
+                                <td>Tech Solutions Ltd.</td>
+                                <td>Contractor</td>
+                                <td><span class="days-left danger">1</span></td>
+                                <td>
+                                    <button class="btn btn-primary review-gift-btn" data-id="2" style="padding: 5px 10px; font-size: 0.85rem;">Review</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Pema Lhamo</td>
+                                <td>Handwoven Kira</td>
+                                <td>8,000</td>
+                                <td>Sister</td>
+                                <td>Immediate Relative</td>
+                                <td><span class="days-left success">5</span></td>
+                                <td>
+                                    <button class="btn btn-primary review-gift-btn" data-id="3" style="padding: 5px 10px; font-size: 0.85rem;">Review</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="guidance-box">
+                    <h3><i class="fas fa-clipboard-list"></i> Review Guidelines</h3>
+                    <ul>
+                        <li>Check if giver is a <strong>prohibited source</strong> (Rule 8)</li>
+                        <li>Verify if gift is from <strong>immediate relative</strong> or based on <strong>personal relationship</strong> (Rule 11)</li>
+                        <li>Determine if gift is of <strong>nominal value</strong> (≤10 days' national minimum wage)</li>
+                        <li>Review for potential <strong>conflict of interest</strong></li>
+                        <li>Make decision within <strong>5 working days</strong> (Rule 33)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Gift Register Page -->
+        <div id="register" class="page">
+            <div class="form-container">
+                <h2 class="form-title"><i class="fas fa-book"></i> Gift Register (Annexure II)</h2>
+                <p class="register-description">Maintained by Gift Disclosure Administrator - Records retained for 5 years (Rule 32)</p>
+                
+                <div class="register-controls">
+                    <div class="controls-left">
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-download"></i> Export to Excel
+                        </button>
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-print"></i> Print Register
+                        </button>
+                    </div>
+                    <div class="controls-right">
+                        <input type="text" class="form-control search-input" placeholder="Search in register...">
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>SI No.</th>
+                                <th>Name</th>
+                                <th>Designation</th>
+                                <th>Gift Description</th>
+                                <th>Date</th>
+                                <th>Source</th>
+                                <th>Value (Nu.)</th>
+                                <th>Disposition</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>Tashi Sherpa</td>
+                                <td>Officer</td>
+                                <td>Traditional Thanka</td>
+                                <td>2023-10-15</td>
+                                <td>Local Artist</td>
+                                <td>5,000</td>
+                                <td>Under Review</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Dorji Wangchuk</td>
+                                <td>Supervisor</td>
+                                <td>Conference Bag</td>
+                                <td>2023-10-12</td>
+                                <td>Tech Solutions Ltd.</td>
+                                <td>3,500</td>
+                                <td>Pending Return</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>Pema Lhamo</td>
+                                <td>Director</td>
+                                <td>Handwoven Kira</td>
+                                <td>2023-10-10</td>
+                                <td>Sister</td>
+                                <td>8,000</td>
+                                <td>Retained</td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>Karma Dorji</td>
+                                <td>Assistant</td>
+                                <td>Book on Governance</td>
+                                <td>2023-10-05</td>
+                                <td>Immediate Relative</td>
+                                <td>800</td>
+                                <td>Retained</td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>Sonam Yangchen</td>
+                                <td>Manager</td>
+                                <td>Pen Set</td>
+                                <td>2023-09-30</td>
+                                <td>Foreign Government</td>
+                                <td>2,000</td>
+                                <td>Agency Use</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="register-footer">
+                    Showing 5 of 42 records. Register maintained as per Rule 25(b).
+                </div>
+            </div>
+        </div>
+        
+        <!-- Penalties Page -->
+        <div id="penalties" class="page">
+            <div class="form-container">
+                <h2 class="form-title"><i class="fas fa-exclamation-triangle"></i> Penalty Management</h2>
+                <p class="penalty-description">Penalties for breaches of Gift Rules (Chapter VII)</p>
+                
+                <div class="penalty-calculator">
+                    <h4><i class="fas fa-calculator"></i> Penalty Calculator</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Gift Value (Nu.)</label>
+                            <input type="number" class="form-control" id="penalty-value" placeholder="Enter gift value" value="5000">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Breach Number</label>
+                            <select class="form-control" id="breach-number">
+                                <option value="1">First Offense</option>
+                                <option value="2">Second Offense</option>
+                                <option value="3">Third or More</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Calculated Fine</label>
+                            <div class="fine-display" id="calculated-fine">
+                                Nu. 10,000
+                            </div>
+                        </div>
+                    </div>
+                    <div class="calculator-help">
+                        <strong>Rule 37:</strong> 1st offense: 2× value, 2nd offense: 5× value, 3rd+ offense: 10× value
+                    </div>
+                </div>
+                
+                <h3 class="penalty-list-title">Recent Penalties Issued</h3>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Public Servant</th>
+                                <th>Breach Type</th>
+                                <th>Gift Value</th>
+                                <th>Fine Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>2023-09-15</td>
+                                <td>Karma Wangdi</td>
+                                <td>Late Declaration (24h rule)</td>
+                                <td>7,000</td>
+                                <td>14,000</td>
+                                <td><span class="status-badge status-pending">Unpaid</span></td>
+                            </tr>
+                            <tr>
+                                <td>2023-08-22</td>
+                                <td>Choki Dorji</td>
+                                <td>Acceptance from Prohibited Source</td>
+                                <td>12,500</td>
+                                <td>25,000</td>
+                                <td><span class="status-badge status-approved">Paid</span></td>
+                            </tr>
+                            <tr>
+                                <td>2023-07-10</td>
+                                <td>Lhamo Yangki</td>
+                                <td>Failure to Declare</td>
+                                <td>3,000</td>
+                                <td>6,000</td>
+                                <td><span class="status-badge status-approved">Paid</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Knowledge Base Page -->
+        <div id="knowledge" class="page">
+            <div class="form-container">
+                <h2 class="form-title"><i class="fas fa-info-circle"></i> Gift Rules Guidance</h2>
+                
+                <div class="rules-summary">
+                    <h3><i class="fas fa-book"></i> Key Rules Summary</h3>
+                    
+                    <div class="rules-grid">
+                        <div class="rule-card prohibited">
+                            <h4>Prohibited Sources (Rule 8)</h4>
+                            <ul>
+                                <li>Those seeking official action from your agency</li>
+                                <li>Those doing business with your agency</li>
+                                <li>Those regulated by your agency</li>
+                                <li>Those whose interests may be affected by your duties</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="rule-card allowed">
+                            <h4>Exceptions (Rule 11)</h4>
+                            <ul>
+                                <li>Gifts from immediate relatives</li>
+                                <li>Gifts based on personal relationships</li>
+                                <li>Opportunities available to the general public</li>
+                                <li>Nominal value gifts on special occasions</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="rule-card definitions">
+                            <h4>Key Definitions</h4>
+                            <ul>
+                                <li><strong>Nominal Value:</strong> ≤10 days' national minimum wage</li>
+                                <li><strong>Immediate Relative:</strong> Spouse, parents, siblings, lineal ascendants/descendants</li>
+                                <li><strong>Fair Market Value:</strong> Retail cost of similar item</li>
+                                <li><strong>Gift:</strong> Anything of economic value with no consideration in return</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="timelines-section">
+                    <h3><i class="fas fa-clock"></i> Critical Timelines</h3>
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Action</th>
+                                    <th>Timeline</th>
+                                    <th>Rule Reference</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Gift Declaration</td>
+                                    <td><strong>Within 24 hours</strong> of receipt</td>
+                                    <td>Rule 27</td>
+                                </tr>
+                                <tr>
+                                    <td>Gift Return (if prohibited)</td>
+                                    <td><strong>Within 5 working days</strong> of report</td>
+                                    <td>Rule 33(b)</td>
+                                </tr>
+                                <tr>
+                                    <td>Record Retention</td>
+                                    <td><strong>5 years</strong></td>
+                                    <td>Rule 32</td>
+                                </tr>
+                                <tr>
+                                    <td>Access to Disclosure</td>
+                                    <td><strong>Within 5 working days</strong> of application</td>
+                                    <td>Rule 29</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="faq-section">
+                    <h3><i class="fas fa-question-circle"></i> Frequently Asked Questions</h3>
+                    
+                    <div class="faq-item">
+                        <h4>Can I accept gifts from family members?</h4>
+                        <p>Yes, gifts from immediate relatives are allowed if clearly motivated by the relationship rather than your official position (Rule 11(b)).</p>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <h4>What is considered "nominal value"?</h4>
+                        <p>Nominal value is an amount not more than ten days' national minimum wage (Rule 47(h)). You must check the current minimum wage.</p>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <h4>What happens if I miss the 24-hour declaration deadline?</h4>
+                        <p>You may be subject to penalties under Rule 36-37. It's important to declare as soon as possible even if late.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>Bhutan Gift Transparency System (BGTS) | Compliant with Gift Rules 2017</p>
+            <p>Anti-Corruption Commission, Royal Government of Bhutan | <i class="fas fa-phone"></i> +975-2-334863/64/66/67/68/69</p>
+            <p class="footer-slogan">Fighting Corruption is a Collective Responsibility</p>
+        </div>
+    </footer>
+    
+    <!-- Modals -->
+    <!-- Prohibited Source Checker Modal -->
+    <div class="modal" id="prohibited-source-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-ban"></i> Prohibited Source Checker</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Check if a gift giver falls under prohibited sources (Rule 8):</p>
+                
+                <div class="form-group">
+                    <label class="form-label">Giver's Relationship to Your Agency</label>
+                    <select class="form-control" id="source-check">
+                        <option value="">Select relationship</option>
+                        <option value="seeks-action">Seeks official action/business from agency</option>
+                        <option value="does-business">Does business with agency</option>
+                        <option value="regulated">Regulated by agency</option>
+                        <option value="affected">Interests affected by your duties</option>
+                        <option value="family">Immediate relative</option>
+                        <option value="friend">Personal friend</option>
+                        <option value="colleague">Colleague/public servant</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div id="check-result" class="check-result">
+                    <h4 id="result-title"></h4>
+                    <p id="result-desc"></p>
+                    <div id="result-rule" class="result-rule"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary modal-close">Cancel</button>
+                <button class="btn btn-primary" id="check-source-btn">Check Source</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gift Review Modal -->
+    <div class="modal" id="review-gift-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-clipboard-check"></i> Review Gift Declaration</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="gift-review-summary">
+                    <h4>Traditional Thanka Painting</h4>
+                    <p><strong>Declared by:</strong> Tashi Sherpa | <strong>Value:</strong> Nu. 5,000</p>
+                    <p><strong>Giver:</strong> Local Artist | <strong>Relationship:</strong> Business Associate</p>
+                    <p><strong>Circumstances:</strong> Gift given in appreciation for cultural advice provided</p>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Review Decision *</label>
+                    <select class="form-control" id="review-decision">
+                        <option value="">Select decision</option>
+                        <option value="approve">Approve Retention</option>
+                        <option value="return">Return to Giver</option>
+                        <option value="agency-use">Retain for Agency Use</option>
+                        <option value="dispose">Dispose as Govt. Property</option>
+                        <option value="more-info">Request More Information</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Comments/Justification</label>
+                    <textarea class="form-control" id="review-comments" rows="3" placeholder="Provide justification for your decision..."></textarea>
+                    <div class="form-help">This will be recorded in the gift register and shared with the declarant.</div>
+                </div>
+                
+                <div class="review-checklist">
+                    <h4>Review Checklist</h4>
+                    <div class="checklist-items">
+                        <label>
+                            <input type="checkbox">
+                            <span>Giver is not a prohibited source (Rule 8)</span>
+                        </label>
+                        <label>
+                            <input type="checkbox">
+                            <span>Gift is permissible under exceptions (Rule 11, 14)</span>
+                        </label>
+                        <label>
+                            <input type="checkbox">
+                            <span>No conflict of interest identified</span>
+                        </label>
+                        <label>
+                            <input type="checkbox">
+                            <span>Declaration submitted within 24 hours</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary modal-close">Cancel</button>
+                <button class="btn btn-primary" id="submit-review-btn">Submit Decision</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Success Modal -->
+    <div class="modal" id="success-modal">
+        <div class="modal-content">
+            <div class="modal-header success">
+                <h3><i class="fas fa-check-circle"></i> Success!</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="success-message">Your gift declaration has been submitted successfully.</p>
+                <p class="success-details">You will receive a confirmation and tracking number shortly.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success modal-close">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
