@@ -1,0 +1,1684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - GDMS - Online Gift Declaration and Management System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎁</text></svg>">
+    <style>
+        :root {
+            --primary-color: #1a3a8f;
+            --secondary-color: #2a5bd7;
+            --accent-color: #ffde59;
+            --light-color: #f8f9fa;
+            --danger-color: #dc3545;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0d1b4e, #1a3a8f);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .login-container {
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        .logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .logo-img {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            overflow: hidden;
+            background-color: white;
+            padding: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .logo-img img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .logo-fallback {
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+            font-size: 40px;
+        }
+        
+        .system-title {
+            font-size: 32px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+        
+        .system-subtitle {
+            font-size: 16px;
+            font-weight: 400;
+            color: var(--accent-color);
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+        
+        .agency-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            opacity: 0.9;
+            margin-top: 10px;
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            animation: fadeIn 0.6s ease;
+            position: relative;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .login-title {
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 1.8rem;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #6c757d;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab-btn.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+        
+        .tab-btn:hover:not(.active) {
+            color: var(--secondary-color);
+            background-color: #f8f9fa;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+            font-size: 0.95rem;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e1e5eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background-color: #f8fafc;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(26, 58, 143, 0.1);
+        }
+        
+        .select-wrapper {
+            position: relative;
+        }
+        
+        .select-wrapper i {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary-color);
+            pointer-events: none;
+        }
+        
+        select.form-control {
+            appearance: none;
+            padding-right: 45px;
+            cursor: pointer;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+        
+        .login-btn, .signup-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .signup-btn {
+            background: linear-gradient(135deg, var(--success-color), #20c997);
+        }
+        
+        .login-btn:hover, .signup-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(26, 58, 143, 0.2);
+        }
+        
+        .login-btn:active, .signup-btn:active {
+            transform: translateY(0);
+        }
+        
+        .login-footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .login-footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .login-footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .demo-credentials {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 25px;
+            border-left: 4px solid var(--accent-color);
+        }
+        
+        .demo-credentials h4 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+        }
+        
+        .demo-credentials ul {
+            list-style: none;
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+        
+        .demo-credentials li {
+            margin-bottom: 5px;
+            padding-left: 5px;
+        }
+        
+        .demo-credentials strong {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid #f5c6cb;
+        }
+        
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid #c3e6cb;
+        }
+        
+        .error-message i, .success-message i {
+            flex-shrink: 0;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .form-hint {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .password-strength {
+            margin-top: 10px;
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .password-strength-meter {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+            background: var(--danger-color);
+        }
+        
+        .password-strength.weak .password-strength-meter {
+            width: 33%;
+            background: var(--danger-color);
+        }
+        
+        .password-strength.medium .password-strength-meter {
+            width: 66%;
+            background: var(--warning-color);
+        }
+        
+        .password-strength.strong .password-strength-meter {
+            width: 100%;
+            background: var(--success-color);
+        }
+        
+        .terms-checkbox {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .terms-checkbox input {
+            margin-top: 3px;
+        }
+        
+        .terms-checkbox label {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .terms-checkbox a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .terms-checkbox a:hover {
+            text-decoration: underline;
+        }
+        
+        .role-info-box {
+            background: #e7f3ff;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--info-color);
+        }
+        
+        .role-info-box h5 {
+            margin: 0 0 5px 0;
+            color: var(--info-color);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .role-info-box p {
+            margin: 0;
+            font-size: 0.85rem;
+        }
+        
+        .role-info-box ul {
+            margin: 5px 0 0 20px;
+            font-size: 0.85rem;
+        }
+        
+        .role-info-box li {
+            margin-bottom: 3px;
+        }
+        
+        .auto-fill-btn {
+            background: var(--accent-color);
+            color: #333;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            margin-top: 5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 600;
+            width: 100%;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        
+        .auto-fill-btn:hover {
+            background: #ffd700;
+        }
+        
+        .role-selection-hint {
+            background: #e7f3ff;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: var(--primary-color);
+            text-align: center;
+            border-left: 4px solid var(--accent-color);
+        }
+        
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 30px 20px;
+            }
+            
+            .system-title {
+                font-size: 1.8rem;
+            }
+            
+            .login-title {
+                font-size: 1.5rem;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="logo-container">
+                <div class="logo-img">
+                    <!-- Logo will be loaded from acclogo.png -->
+                    <img src="acclogo.png" alt="ACC Logo" id="agency-logo" onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex';">
+                    <div class="logo-fallback" id="logo-fallback" style="display: none;">
+                        <i class="fas fa-gift"></i>
+                    </div>
+                </div>
+                <div class="system-title">GDMS</div>
+                <div class="system-subtitle">ONLINE GIFT DECLARATION AND MANAGEMENT SYSTEM</div>
+                <div class="agency-name">Anti-Corruption Commission</div>
+            </div>
+            <p style="font-size: 0.9rem; margin-top: 10px; opacity: 0.8;">
+                <i class="fas fa-shield-alt"></i> Royal Government of Bhutan
+            </p>
+        </div>
+        
+        <div class="login-card">
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="login">Login</button>
+                <button class="tab-btn" data-tab="signup">Register as Public Official</button>
+            </div>
+            
+            <!-- Login Tab -->
+            <div id="login-tab" class="tab-content active">
+                <h2 class="login-title">
+                    <i class="fas fa-sign-in-alt"></i> System Login
+                </h2>
+                
+                <div id="error-message" class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="error-text">Invalid credentials</span>
+                </div>
+                
+                <div class="role-info-box">
+                    <h5><i class="fas fa-info-circle"></i> User Account Management</h5>
+                    <p><strong>How accounts are created:</strong></p>
+                    <ul>
+                        <li><strong>Public Officials:</strong> Self-register (Sign-up tab)</li>
+                        <li><strong>HoA (Head of Agency):</strong> Assigned by ACC Admin</li>
+                        <li><strong>GDA/GAC:</strong> Assigned by their agency's HoA</li>
+                        <li><strong>ACC Admin:</strong> System administrators</li>
+                    </ul>
+                </div>
+                
+                <form id="login-form">
+                    <div class="form-group">
+                        <label class="form-label" for="agency">
+                            <i class="fas fa-building"></i> Select Agency
+                        </label>
+                        <div class="select-wrapper">
+                            <select class="form-control" id="agency" name="agency" required>
+                                <option value="">-- Select Your Agency --</option>
+                                <!-- ACC System Administration -->
+                                <option value="ACC">Anti-Corruption Commission (System Admin)</option>
+                                
+                                <!-- Ministry of Finance -->
+                                <option value="MOF">Ministry of Finance</option>
+                                
+                                <!-- Ministry of Education -->
+                                <option value="MOE">Ministry of Education</option>
+                                
+                                <!-- Ministry of Health -->
+                                <option value="MOH">Ministry of Health</option>
+                                
+                                <!-- Ministry of Home Affairs -->
+                                <option value="MOHA">Ministry of Home Affairs</option>
+                                
+                                <!-- Ministry of Agriculture -->
+                                <option value="MOA">Ministry of Agriculture</option>
+                                
+                                <!-- Ministry of Works & Human Settlement -->
+                                <option value="MOWHS">Ministry of Works & Human Settlement</option>
+                                
+                                <!-- Other Ministries -->
+                                <option value="MOLHR">Ministry of Labour & Human Resources</option>
+                                <option value="MOT">Ministry of Information & Communications</option>
+                                <option value="MONE">Ministry of Economic Affairs</option>
+                                <option value="MONR">Ministry of Natural Resources</option>
+                            </select>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="login-email">
+                            <i class="fas fa-envelope"></i> Email Address
+                        </label>
+                        <input type="email" class="form-control" id="login-email" name="email" 
+                               placeholder="your.name@agency.gov.bt" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="login-password">
+                            <i class="fas fa-lock"></i> Password
+                        </label>
+                        <div class="select-wrapper">
+                            <input type="password" class="form-control" id="login-password" name="password" 
+                                   placeholder="Enter your password" required>
+                            <button type="button" class="password-toggle" id="toggle-login-password">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="login-role">
+                            <i class="fas fa-user-tag"></i> Login As
+                        </label>
+                        <div class="select-wrapper">
+                            <select class="form-control" id="login-role" name="role" required>
+                                <option value="">-- Select Your Role --</option>
+                                <!-- Public Official Roles -->
+                                <option value="public-servant">Public Official (Declare Gifts)</option>
+                                
+                                <!-- Agency Administration Roles (Assigned) -->
+                                <option value="gda">Gift Disclosure Administrator (GDA)</option>
+                                <option value="hoa">Head of Agency (HoA)</option>
+                                <option value="gac-member">Gift Administration Committee (GAC)</option>
+                                
+                                <!-- ACC System Administration -->
+                                <option value="acc-admin" class="acc-option">ACC System Administrator</option>
+                            </select>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="form-hint">
+                            <i class="fas fa-info-circle"></i> GDA, HoA, and GAC users are assigned (not self-registered)
+                        </div>
+                    </div>
+                    
+                    <button type="button" class="auto-fill-btn" id="auto-fill-demo">
+                        <i class="fas fa-magic"></i> Auto-fill Demo Credentials for Selected Role
+                    </button>
+                    
+                    <div class="role-selection-hint" id="role-hint">
+                        <i class="fas fa-lightbulb"></i> Select a role above to see demo credentials
+                    </div>
+                    
+                    <button type="submit" class="login-btn" id="login-button">
+                        <i class="fas fa-sign-in-alt"></i> Login to System
+                    </button>
+                </form>
+                
+                <div class="demo-credentials">
+                    <h4><i class="fas fa-info-circle"></i> Demo Login Credentials</h4>
+                    <ul>
+                        <li><strong>ACC Admin:</strong> acc.admin@acc.gov.bt / password123</li>
+                        <li><strong>Ministry HoA:</strong> director@mof.gov.bt / password123</li>
+                        <li><strong>GDA:</strong> gda@mof.gov.bt / password123</li>
+                        <li><strong>GAC Member:</strong> committee@mof.gov.bt / password123</li>
+                        <li><strong>Public Official:</strong> officer@mof.gov.bt / password123</li>
+                    </ul>
+                    <p style="font-size: 0.8rem; margin-top: 8px; color: #666;">
+                        <i class="fas fa-lightbulb"></i> Select role and click "Auto-fill Demo Credentials" above
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Sign Up Tab (ONLY for Public Officials) -->
+            <div id="signup-tab" class="tab-content">
+                <h2 class="login-title">
+                    <i class="fas fa-user-plus"></i> Register as Public Official
+                </h2>
+                
+                <div class="role-info-box">
+                    <h5><i class="fas fa-exclamation-circle"></i> Important Notice</h5>
+                    <p><strong>Who can register here:</strong></p>
+                    <ul>
+                        <li><strong>✅ Public Officials:</strong> Can self-register to declare gifts</li>
+                        <li><strong>❌ HoA (Head of Agency):</strong> Assigned by ACC Admin</li>
+                        <li><strong>❌ GDA/GAC:</strong> Assigned by their agency's HoA</li>
+                        <li><strong>❌ ACC Admin:</strong> System administrators</li>
+                    </ul>
+                </div>
+                
+                <div id="signup-error" class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="signup-error-text">Please fix the errors below</span>
+                </div>
+                
+                <div id="signup-success" class="success-message">
+                    <i class="fas fa-check-circle"></i>
+                    <span id="signup-success-text">Registration successful! Please login.</span>
+                </div>
+                
+                <form id="signup-form">
+                    <div class="form-group">
+                        <label class="form-label" for="signup-agency">
+                            <i class="fas fa-building"></i> Select Your Government Agency *
+                        </label>
+                        <div class="select-wrapper">
+                            <select class="form-control" id="signup-agency" name="agency" required>
+                                <option value="">-- Select Your Agency --</option>
+                                <!-- Public Officials cannot join ACC -->
+                                <option value="MOF">Ministry of Finance</option>
+                                <option value="MOE">Ministry of Education</option>
+                                <option value="MOH">Ministry of Health</option>
+                                <option value="MOHA">Ministry of Home Affairs</option>
+                                <option value="MOA">Ministry of Agriculture</option>
+                                <option value="MOWHS">Ministry of Works & Human Settlement</option>
+                                <option value="MOLHR">Ministry of Labour & Human Resources</option>
+                                <option value="MOT">Ministry of Information & Communications</option>
+                                <option value="MONE">Ministry of Economic Affairs</option>
+                                <option value="MONR">Ministry of Natural Resources</option>
+                                <option value="other">Other Government Agency</option>
+                            </select>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="form-hint">
+                            <i class="fas fa-info-circle"></i> Select the government agency where you work
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="first-name">
+                                <i class="fas fa-user"></i> First Name *
+                            </label>
+                            <input type="text" class="form-control" id="first-name" name="firstName" 
+                                   placeholder="Enter your first name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="last-name">
+                                <i class="fas fa-user"></i> Last Name *
+                            </label>
+                            <input type="text" class="form-control" id="last-name" name="lastName" 
+                                   placeholder="Enter your last name" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="signup-email">
+                            <i class="fas fa-envelope"></i> Official Email Address *
+                        </label>
+                        <input type="email" class="form-control" id="signup-email" name="email" 
+                               placeholder="your.name@agency.gov.bt" required>
+                        <div class="form-hint">
+                            <i class="fas fa-info-circle"></i> Must be your official government email address
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="position">
+                            <i class="fas fa-briefcase"></i> Position/Designation *
+                        </label>
+                        <input type="text" class="form-control" id="position" name="position" 
+                               placeholder="e.g., Senior Officer, Teacher, Engineer" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="employee-id">
+                            <i class="fas fa-id-card"></i> Employee ID (Optional)
+                        </label>
+                        <input type="text" class="form-control" id="employee-id" name="employeeId" 
+                               placeholder="Your government employee ID">
+                        <div class="form-hint">
+                            <i class="fas fa-info-circle"></i> For verification purposes
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="signup-password">
+                            <i class="fas fa-lock"></i> Create Password *
+                        </label>
+                        <div class="select-wrapper">
+                            <input type="password" class="form-control" id="signup-password" name="password" 
+                                   placeholder="Create a strong password" required>
+                            <button type="button" class="password-toggle" id="toggle-signup-password">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="password-strength" id="password-strength">
+                            <div class="password-strength-meter"></div>
+                        </div>
+                        <div class="form-hint">
+                            <i class="fas fa-info-circle"></i> Minimum 8 characters with uppercase, lowercase, and numbers
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="confirm-password">
+                            <i class="fas fa-lock"></i> Confirm Password *
+                        </label>
+                        <div class="select-wrapper">
+                            <input type="password" class="form-control" id="confirm-password" name="confirmPassword" 
+                               placeholder="Re-enter your password" required>
+                            <button type="button" class="password-toggle" id="toggle-confirm-password">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="terms-checkbox">
+                        <input type="checkbox" id="terms" name="terms" required>
+                        <label for="terms">
+                            I agree to the <a href="#" id="terms-link">Terms of Service</a> and confirm that:
+                            <ul style="margin-top: 5px; margin-left: 20px; font-size: 0.85rem;">
+                                <li>I am a government employee (public official)</li>
+                                <li>I will declare gifts within 24 hours of receipt</li>
+                                <li>I will provide accurate information</li>
+                                <li>I understand penalties for non-compliance</li>
+                            </ul>
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="form-hint" style="color: var(--warning-color);">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Important:</strong> Your registration will be verified by your agency's GDA/HoA before account activation.
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="signup-btn" id="signup-button">
+                        <i class="fas fa-user-plus"></i> Register as Public Official
+                    </button>
+                </form>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <p style="color: #6c757d; font-size: 0.9rem;">
+                        Already have an account? 
+                        <a href="#" id="switch-to-login" style="font-weight: 600;">Login here</a>
+                    </p>
+                </div>
+            </div>
+            
+            <div class="login-footer">
+                <p>
+                    <i class="fas fa-shield-alt"></i> Secure System • 
+                    <i class="fas fa-lock"></i> Encrypted Connection
+                </p>
+                <p style="margin-top: 10px;">
+                    For assistance, contact: 
+                    <a href="mailto:support@gdms.gov.bt">support@gdms.gov.bt</a> | 
+                    <i class="fas fa-phone"></i> +975-2-334863
+                </p>
+                <p style="font-size: 0.8rem; margin-top: 15px; color: #6c757d;">
+                    "Transparency in Public Service, Integrity in Governance"
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const loginForm = document.getElementById('login-form');
+        const signupForm = document.getElementById('signup-form');
+        const loginTabBtn = document.querySelector('[data-tab="login"]');
+        const signupTabBtn = document.querySelector('[data-tab="signup"]');
+        const loginTab = document.getElementById('login-tab');
+        const signupTab = document.getElementById('signup-tab');
+        const switchToLoginLink = document.getElementById('switch-to-login');
+        const autoFillBtn = document.getElementById('auto-fill-demo');
+        const roleHint = document.getElementById('role-hint');
+        
+        // Login elements
+        const agencySelect = document.getElementById('agency');
+        const loginEmailInput = document.getElementById('login-email');
+        const loginPasswordInput = document.getElementById('login-password');
+        const loginRoleSelect = document.getElementById('login-role');
+        const toggleLoginPasswordBtn = document.getElementById('toggle-login-password');
+        const loginBtn = document.getElementById('login-button');
+        const errorMessage = document.getElementById('error-message');
+        const errorText = document.getElementById('error-text');
+        
+        // Signup elements
+        const signupAgencySelect = document.getElementById('signup-agency');
+        const firstNameInput = document.getElementById('first-name');
+        const lastNameInput = document.getElementById('last-name');
+        const signupEmailInput = document.getElementById('signup-email');
+        const positionInput = document.getElementById('position');
+        const employeeIdInput = document.getElementById('employee-id');
+        const signupPasswordInput = document.getElementById('signup-password');
+        const confirmPasswordInput = document.getElementById('confirm-password');
+        const toggleSignupPasswordBtn = document.getElementById('toggle-signup-password');
+        const toggleConfirmPasswordBtn = document.getElementById('toggle-confirm-password');
+        const signupBtn = document.getElementById('signup-button');
+        const signupError = document.getElementById('signup-error');
+        const signupErrorText = document.getElementById('signup-error-text');
+        const signupSuccess = document.getElementById('signup-success');
+        const signupSuccessText = document.getElementById('signup-success-text');
+        const passwordStrength = document.getElementById('password-strength');
+        const termsCheckbox = document.getElementById('terms');
+        
+        // Demo credentials for each role and agency
+        const demoCredentials = {
+            'ACC': {
+                'acc-admin': {
+                    email: 'acc.admin@acc.gov.bt',
+                    password: 'password123',
+                    agency: 'ACC',
+                    dashboard: 'acc-dashboard.html'
+                }
+            },
+            'MOF': {
+                'public-servant': {
+                    email: 'officer@mof.gov.bt',
+                    password: 'password123',
+                    agency: 'MOF',
+                    dashboard: 'public-official.html'
+                },
+                'gda': {
+                    email: 'gda@mof.gov.bt',
+                    password: 'password123',
+                    agency: 'MOF',
+                    dashboard: 'gda.html'
+                },
+                'hoa': {
+                    email: 'director@mof.gov.bt',
+                    password: 'password123',
+                    agency: 'MOF',
+                    dashboard: 'hoa.html'
+                },
+                'gac-member': {
+                    email: 'committee@mof.gov.bt',
+                    password: 'password123',
+                    agency: 'MOF',
+                    dashboard: 'gac.html'
+                }
+            },
+            'MOE': {
+                'public-servant': {
+                    email: 'teacher@moe.gov.bt',
+                    password: 'password123',
+                    agency: 'MOE',
+                    dashboard: 'public-official.html'
+                },
+                'gda': {
+                    email: 'gda@moe.gov.bt',
+                    password: 'password123',
+                    agency: 'MOE',
+                    dashboard: 'gda.html'
+                },
+                'hoa': {
+                    email: 'director@moe.gov.bt',
+                    password: 'password123',
+                    agency: 'MOE',
+                    dashboard: 'hoa.html'
+                },
+                'gac-member': {
+                    email: 'committee@moe.gov.bt',
+                    password: 'password123',
+                    agency: 'MOE',
+                    dashboard: 'gac.html'
+                }
+            },
+            'MOH': {
+                'public-servant': {
+                    email: 'doctor@health.gov.bt',
+                    password: 'password123',
+                    agency: 'MOH',
+                    dashboard: 'public-official.html'
+                },
+                'gda': {
+                    email: 'gda@health.gov.bt',
+                    password: 'password123',
+                    agency: 'MOH',
+                    dashboard: 'gda.html'
+                },
+                'hoa': {
+                    email: 'director@health.gov.bt',
+                    password: 'password123',
+                    agency: 'MOH',
+                    dashboard: 'hoa.html'
+                },
+                'gac-member': {
+                    email: 'committee@health.gov.bt',
+                    password: 'password123',
+                    agency: 'MOH',
+                    dashboard: 'gac.html'
+                }
+            },
+            // Default fallback for other agencies
+            'default': {
+                'public-servant': {
+                    email: 'officer@gov.bt',
+                    password: 'password123',
+                    agency: 'GOV',
+                    dashboard: 'public-official.html'
+                },
+                'gda': {
+                    email: 'gda@gov.bt',
+                    password: 'password123',
+                    agency: 'GOV',
+                    dashboard: 'gda.html'
+                },
+                'hoa': {
+                    email: 'director@gov.bt',
+                    password: 'password123',
+                    agency: 'GOV',
+                    dashboard: 'hoa.html'
+                },
+                'gac-member': {
+                    email: 'committee@gov.bt',
+                    password: 'password123',
+                    agency: 'GOV',
+                    dashboard: 'gac.html'
+                },
+                'acc-admin': {
+                    email: 'admin@acc.gov.bt',
+                    password: 'password123',
+                    agency: 'ACC',
+                    dashboard: 'acc-dashboard.html'
+                }
+            }
+        };
+        
+        // Agency to email domain mapping
+        const agencyDomains = {
+            'ACC': 'acc.gov.bt',
+            'MOF': 'mof.gov.bt',
+            'MOE': 'moe.gov.bt',
+            'MOH': 'health.gov.bt',
+            'MOHA': 'moha.gov.bt',
+            'MOA': 'moa.gov.bt',
+            'MOWHS': 'mowhs.gov.bt',
+            'MOLHR': 'molhr.gov.bt',
+            'MOT': 'mic.gov.bt',
+            'MONE': 'mof.gov.bt',
+            'MONR': 'monr.gov.bt',
+            'other': 'gov.bt'
+        };
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔐 GDMS Login System Initialized');
+            console.log('📋 User Account Workflow:');
+            console.log('   • Public Officials: Self-register → public-official.html');
+            console.log('   • HoA: Assigned by ACC Admin → hoa.html');
+            console.log('   • GDA: Assigned by HoA → gda.html');
+            console.log('   • GAC: Assigned by HoA → gac.html');
+            console.log('   • ACC Admin: System administrators → acc-dashboard.html');
+            
+            // Clear any existing session on page load
+            localStorage.removeItem('gdms_user');
+            localStorage.removeItem('gdms_token');
+            sessionStorage.removeItem('gdms_session');
+            
+            // Set up event listeners
+            setupEventListeners();
+            
+            // Set demo email based on agency for login
+            agencySelect.addEventListener('change', updateLoginEmailSuggestion);
+            
+            // Set up signup email suggestion
+            signupAgencySelect.addEventListener('change', updateSignupEmailSuggestion);
+            
+            // Password strength checker
+            signupPasswordInput.addEventListener('input', checkPasswordStrength);
+            
+            // Auto-fill demo credentials when role changes
+            loginRoleSelect.addEventListener('change', function() {
+                autoFillBasedOnSelection();
+                updateRoleHint();
+            });
+            
+            // Auto-fill when agency changes
+            agencySelect.addEventListener('change', function() {
+                autoFillBasedOnSelection();
+                updateRoleHint();
+            });
+            
+            // Set default agency to MOF for demo
+            agencySelect.value = 'MOF';
+            updateLoginEmailSuggestion();
+            
+            // Set initial role hint
+            updateRoleHint();
+        });
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            // Tab switching
+            loginTabBtn.addEventListener('click', () => switchTab('login'));
+            signupTabBtn.addEventListener('click', () => switchTab('signup'));
+            switchToLoginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                switchTab('login');
+            });
+            
+            // Auto-fill button
+            autoFillBtn.addEventListener('click', autoFillBasedOnSelection);
+            
+            // Toggle password visibility
+            toggleLoginPasswordBtn.addEventListener('click', () => 
+                togglePasswordVisibility(loginPasswordInput, toggleLoginPasswordBtn));
+            
+            toggleSignupPasswordBtn.addEventListener('click', () => 
+                togglePasswordVisibility(signupPasswordInput, toggleSignupPasswordBtn));
+            
+            toggleConfirmPasswordBtn.addEventListener('click', () => 
+                togglePasswordVisibility(confirmPasswordInput, toggleConfirmPasswordBtn));
+            
+            // Form submissions
+            loginForm.addEventListener('submit', handleLogin);
+            signupForm.addEventListener('submit', handleSignup);
+            
+            // Agency change - show/hide ACC admin option
+            agencySelect.addEventListener('change', function() {
+                const isACC = this.value === 'ACC';
+                const accOption = loginRoleSelect.querySelector('option.acc-option');
+                
+                if (isACC) {
+                    accOption.style.display = 'block';
+                    // Auto-select ACC admin for ACC agency
+                    loginRoleSelect.value = 'acc-admin';
+                    autoFillBasedOnSelection();
+                } else {
+                    accOption.style.display = 'none';
+                    // Reset role if ACC admin was selected
+                    if (loginRoleSelect.value === 'acc-admin') {
+                        loginRoleSelect.value = '';
+                    }
+                }
+                
+                updateLoginEmailSuggestion();
+                autoFillBasedOnSelection();
+                updateRoleHint();
+            });
+            
+            // Terms link
+            document.getElementById('terms-link').addEventListener('click', function(e) {
+                e.preventDefault();
+                showTermsModal();
+            });
+            
+            // Enter key support
+            document.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const activeTab = document.querySelector('.tab-content.active').id;
+                    if (activeTab === 'login-tab' && !loginForm.contains(document.activeElement)) {
+                        loginForm.requestSubmit();
+                    } else if (activeTab === 'signup-tab' && !signupForm.contains(document.activeElement)) {
+                        signupForm.requestSubmit();
+                    }
+                }
+            });
+        }
+        
+        // Update role hint based on selection
+        function updateRoleHint() {
+            const agency = agencySelect.value;
+            const role = loginRoleSelect.value;
+            
+            if (!role) {
+                roleHint.innerHTML = '<i class="fas fa-lightbulb"></i> Select a role above to see demo credentials';
+                return;
+            }
+            
+            // Get dashboard file for this role
+            let dashboardFile = '';
+            let roleName = '';
+            
+            switch(role) {
+                case 'public-servant':
+                    dashboardFile = 'public-official.html';
+                    roleName = 'Public Official Dashboard';
+                    break;
+                case 'gda':
+                    dashboardFile = 'gda.html';
+                    roleName = 'GDA Dashboard';
+                    break;
+                case 'hoa':
+                    dashboardFile = 'hoa.html';
+                    roleName = 'Head of Agency Dashboard';
+                    break;
+                case 'gac-member':
+                    dashboardFile = 'gac.html';
+                    roleName = 'GAC Member Dashboard';
+                    break;
+                case 'acc-admin':
+                    dashboardFile = 'acc-dashboard.html';
+                    roleName = 'ACC Admin Dashboard';
+                    break;
+            }
+            
+            roleHint.innerHTML = `<i class="fas fa-external-link-alt"></i> <strong>${roleName}</strong> - You will be redirected to <code>${dashboardFile}</code>`;
+        }
+        
+        // Auto-fill based on selected agency and role
+        function autoFillBasedOnSelection() {
+            const agency = agencySelect.value;
+            const role = loginRoleSelect.value;
+            
+            if (!agency || !role) {
+                showError('Please select both agency and role first');
+                return;
+            }
+            
+            // Get demo credentials for selected agency and role
+            let credentials = null;
+            
+            if (demoCredentials[agency] && demoCredentials[agency][role]) {
+                credentials = demoCredentials[agency][role];
+            } else {
+                // Fallback to default if agency not in demo list
+                credentials = demoCredentials.default[role];
+                if (credentials) {
+                    // Update agency to match the credentials
+                    agencySelect.value = credentials.agency;
+                }
+            }
+            
+            if (credentials) {
+                loginEmailInput.value = credentials.email;
+                loginPasswordInput.value = credentials.password;
+                
+                // Show success feedback
+                showAutoFillSuccess(`Auto-filled ${role.replace('-', ' ')} credentials for ${agency}`);
+                
+                // Update hint
+                updateRoleHint();
+            }
+        }
+        
+        // Show auto-fill success message
+        function showAutoFillSuccess(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success-message';
+            successDiv.style.display = 'flex';
+            successDiv.innerHTML = `<i class="fas fa-check-circle"></i><span>${message}</span>`;
+            
+            // Insert after the auto-fill button
+            autoFillBtn.parentNode.insertBefore(successDiv, autoFillBtn.nextSibling);
+            
+            setTimeout(() => {
+                successDiv.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Switch between login and signup tabs
+        function switchTab(tab) {
+            // Update tab buttons
+            loginTabBtn.classList.remove('active');
+            signupTabBtn.classList.remove('active');
+            
+            // Hide all tab contents
+            loginTab.classList.remove('active');
+            signupTab.classList.remove('active');
+            
+            // Show selected tab
+            if (tab === 'login') {
+                loginTabBtn.classList.add('active');
+                loginTab.classList.add('active');
+                // Clear any messages
+                hideMessages();
+            } else {
+                signupTabBtn.classList.add('active');
+                signupTab.classList.add('active');
+                // Clear any messages
+                hideMessages();
+            }
+        }
+        
+        // Toggle password visibility
+        function togglePasswordVisibility(passwordInput, toggleBtn) {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            toggleBtn.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+        }
+        
+        // Update login email suggestion based on agency
+        function updateLoginEmailSuggestion() {
+            const agency = agencySelect.value;
+            if (agency && agencyDomains[agency]) {
+                loginEmailInput.placeholder = `your.name@${agencyDomains[agency]}`;
+            } else {
+                loginEmailInput.placeholder = 'your.name@agency.gov.bt';
+            }
+        }
+        
+        // Update signup email suggestion based on agency
+        function updateSignupEmailSuggestion() {
+            const agency = signupAgencySelect.value;
+            if (agency && agencyDomains[agency]) {
+                signupEmailInput.placeholder = `your.name@${agencyDomains[agency]}`;
+            } else {
+                signupEmailInput.placeholder = 'your.name@agency.gov.bt';
+            }
+        }
+        
+        // Check password strength
+        function checkPasswordStrength() {
+            const password = signupPasswordInput.value;
+            let strength = 0;
+            
+            // Length check
+            if (password.length >= 8) strength++;
+            
+            // Contains lowercase
+            if (/[a-z]/.test(password)) strength++;
+            
+            // Contains uppercase
+            if (/[A-Z]/.test(password)) strength++;
+            
+            // Contains numbers
+            if (/[0-9]/.test(password)) strength++;
+            
+            // Contains special characters
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+            
+            // Update strength meter
+            passwordStrength.className = 'password-strength';
+            if (strength <= 2) {
+                passwordStrength.classList.add('weak');
+            } else if (strength <= 4) {
+                passwordStrength.classList.add('medium');
+            } else {
+                passwordStrength.classList.add('strong');
+            }
+        }
+        
+        // Handle login
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            // Get form values
+            const agency = agencySelect.value;
+            const email = loginEmailInput.value.trim();
+            const password = loginPasswordInput.value;
+            const role = loginRoleSelect.value;
+            
+            // Validation
+            if (!agency || !email || !password || !role) {
+                showError('Please fill all fields');
+                return;
+            }
+            
+            // Email validation for agency domain
+            if (agency !== 'ACC') {
+                const domain = agencyDomains[agency];
+                if (domain && !email.toLowerCase().endsWith(`@${domain}`)) {
+                    showError(`Email should be from ${domain} domain for ${agencySelect.options[agencySelect.selectedIndex].text}`);
+                    return;
+                }
+            }
+            
+            // Show loading state
+            const originalText = loginBtn.innerHTML;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+            loginBtn.disabled = true;
+            
+            try {
+                // Simulate API call
+                await simulateLoginAPI({ agency, email, password, role });
+                
+                // Determine dashboard file based on role
+                let dashboardFile = '';
+                switch(role) {
+                    case 'public-servant':
+                        dashboardFile = 'public-official.html';
+                        break;
+                    case 'gda':
+                        dashboardFile = 'gda.html';
+                        break;
+                    case 'hoa':
+                        dashboardFile = 'hoa.html';
+                        break;
+                    case 'gac-member':
+                        dashboardFile = 'gac.html';
+                        break;
+                    case 'acc-admin':
+                        dashboardFile = 'acc-dashboard.html';
+                        break;
+                    default:
+                        dashboardFile = 'public-official.html';
+                }
+                
+                // Store user session
+                const userData = {
+                    id: Date.now(),
+                    name: getUserNameFromEmail(email),
+                    email: email,
+                    agency: agency,
+                    agencyName: agencySelect.options[agencySelect.selectedIndex].text,
+                    role: role,
+                    roleName: loginRoleSelect.options[loginRoleSelect.selectedIndex].text,
+                    isSystemAdmin: agency === 'ACC' && role === 'acc-admin',
+                    loginTime: new Date().toISOString(),
+                    sessionId: 'gdms-session-' + Date.now(),
+                    dashboardFile: dashboardFile
+                };
+                
+                // Store in localStorage and sessionStorage
+                localStorage.setItem('gdms_user', JSON.stringify(userData));
+                localStorage.setItem('gdms_token', 'demo-token-' + Date.now());
+                sessionStorage.setItem('gdms_session', userData.sessionId);
+                
+                console.log('✅ Login successful:', userData);
+                console.log(`📁 Redirecting to: ${dashboardFile}`);
+                
+                // Redirect to appropriate dashboard
+                redirectToDashboard(userData);
+                
+            } catch (error) {
+                showError(error.message);
+                loginBtn.innerHTML = originalText;
+                loginBtn.disabled = false;
+            }
+        }
+        
+        // Handle signup (ONLY for public officials)
+        async function handleSignup(e) {
+            e.preventDefault();
+            
+            // Get form values
+            const agency = signupAgencySelect.value;
+            const firstName = firstNameInput.value.trim();
+            const lastName = lastNameInput.value.trim();
+            const email = signupEmailInput.value.trim();
+            const position = positionInput.value.trim();
+            const employeeId = employeeIdInput.value.trim();
+            const password = signupPasswordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            
+            // Validation
+            if (!agency || !firstName || !lastName || !email || !position || !password || !confirmPassword) {
+                showSignupError('Please fill all required fields (*)');
+                return;
+            }
+            
+            if (!termsCheckbox.checked) {
+                showSignupError('You must agree to the Terms of Service');
+                return;
+            }
+            
+            // Prevent ACC registration (HoA is assigned by ACC Admin)
+            if (agency === 'ACC') {
+                showSignupError('ACC users are assigned by system administrators. Please contact ACC support.');
+                return;
+            }
+            
+            // Email validation
+            const domain = agencyDomains[agency];
+            if (domain && !email.toLowerCase().endsWith(`@${domain}`)) {
+                showSignupError(`Email must be from ${domain} domain for the selected agency`);
+                return;
+            }
+            
+            // Password validation
+            if (password.length < 8) {
+                showSignupError('Password must be at least 8 characters long');
+                return;
+            }
+            
+            if (!/[a-z]/.test(password)) {
+                showSignupError('Password must contain at least one lowercase letter');
+                return;
+            }
+            
+            if (!/[A-Z]/.test(password)) {
+                showSignupError('Password must contain at least one uppercase letter');
+                return;
+            }
+            
+            if (!/[0-9]/.test(password)) {
+                showSignupError('Password must contain at least one number');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showSignupError('Passwords do not match');
+                return;
+            }
+            
+            // Show loading state
+            const originalText = signupBtn.innerHTML;
+            signupBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
+            signupBtn.disabled = true;
+            
+            try {
+                // Simulate API call for registration
+                await simulateSignupAPI({
+                    agency,
+                    firstName,
+                    lastName,
+                    email,
+                    position,
+                    employeeId,
+                    password,
+                    role: 'public-servant' // Force role to public-servant
+                });
+                
+                // Show success message
+                showSignupSuccess('Account created successfully! Your account will be activated after verification by your agency GDA/HoA.');
+                
+                // Reset form
+                signupForm.reset();
+                passwordStrength.className = 'password-strength';
+                
+                // Switch to login after 3 seconds
+                setTimeout(() => {
+                    switchTab('login');
+                    // Pre-fill login email
+                    loginEmailInput.value = email;
+                    // Auto-select public-servant role
+                    loginRoleSelect.value = 'public-servant';
+                    // Auto-select agency
+                    agencySelect.value = agency;
+                    autoFillBasedOnSelection();
+                    signupBtn.innerHTML = originalText;
+                    signupBtn.disabled = false;
+                }, 3000);
+                
+            } catch (error) {
+                showSignupError(error.message);
+                signupBtn.innerHTML = originalText;
+                signupBtn.disabled = false;
+            }
+        }
+        
+        // Simulate login API
+        function simulateLoginAPI(credentials) {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    const { email, password, agency, role } = credentials;
+                    
+                    // Check if this matches any demo credentials
+                    let agencyCreds = demoCredentials[agency];
+                    if (!agencyCreds) {
+                        agencyCreds = demoCredentials.default;
+                    }
+                    
+                    if (agencyCreds) {
+                        const roleCreds = agencyCreds[role];
+                        if (roleCreds && roleCreds.email === email && roleCreds.password === password) {
+                            resolve({ success: true, message: 'Login successful' });
+                            return;
+                        }
+                    }
+                    
+                    // For demo purposes, accept any email that looks valid
+                    if (email.includes('@') && email.endsWith('.gov.bt') && password === 'password123') {
+                        resolve({ success: true, message: 'Demo login successful' });
+                    } else {
+                        reject(new Error('Invalid email or password'));
+                    }
+                }, 800);
+            });
+        }
+        
+        // Simulate signup API (ONLY for public officials)
+        function simulateSignupAPI(userData) {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    // Check if email already exists
+                    const existingUsers = JSON.parse(localStorage.getItem('gdms_registered_users') || '[]');
+                    
+                    if (existingUsers.some(user => user.email === userData.email)) {
+                        reject(new Error('Email already registered. Please use a different email or contact support.'));
+                        return;
+                    }
+                    
+                    // Add new user to local storage
+                    const newUser = {
+                        ...userData,
+                        id: 'USR' + Date.now(),
+                        role: 'public-servant', // Force public-servant role
+                        status: 'pending',
+                        createdAt: new Date().toISOString(),
+                        fullName: `${userData.firstName} ${userData.lastName}`,
+                        isSelfRegistered: true,
+                        assignedBy: 'self-registered', // Mark as self-registered
+                        dashboardFile: 'public-official.html' // Public officials go to public-official.html
+                    };
+                    
+                    existingUsers.push(newUser);
+                    localStorage.setItem('gdms_registered_users', JSON.stringify(existingUsers));
+                    
+                    // Log for demo purposes
+                    console.log('📧 Public Official Registration:', newUser);
+                    console.log('ℹ️ This account requires GDA/HoA approval before activation');
+                    console.log('ℹ️ Will redirect to: public-official.html after activation');
+                    
+                    resolve({ success: true, message: 'Registration submitted for approval' });
+                }, 1200);
+            });
+        }
+        
+        // Get user name from email
+        function getUserNameFromEmail(email) {
+            const namePart = email.split('@')[0];
+            const nameMap = {
+                'acc.admin': 'ACC System Administrator',
+                'director': 'Head of Agency',
+                'gda': 'Gift Disclosure Administrator',
+                'officer': 'Public Official',
+                'teacher': 'Teacher',
+                'doctor': 'Doctor',
+                'committee': 'GAC Member'
+            };
+            
+            if (nameMap[namePart]) {
+                return nameMap[namePart];
+            }
+            
+            return namePart.charAt(0).toUpperCase() + namePart.slice(1);
+        }
+        
+        // Redirect to appropriate dashboard
+        function redirectToDashboard(userData) {
+            loginBtn.innerHTML = '<i class="fas fa-check"></i> Login Successful! Redirecting...';
+            
+            setTimeout(() => {
+                // Use the dashboard file from user data
+                const dashboardFile = userData.dashboardFile || getDashboardFileByRole(userData.role);
+                console.log(`➡️ Redirecting to: ${dashboardFile}`);
+                window.location.href = dashboardFile;
+            }, 1000);
+        }
+        
+        // Get dashboard file by role
+        function getDashboardFileByRole(role) {
+            switch(role) {
+                case 'public-servant': return 'public-official.html';
+                case 'gda': return 'gda.html';
+                case 'hoa': return 'hoa.html';
+                case 'gac-member': return 'gac.html';
+                case 'acc-admin': return 'acc-dashboard.html';
+                default: return 'public-official.html';
+            }
+        }
+        
+        // Show error message (login)
+        function showError(message) {
+            hideMessages();
+            errorText.textContent = message;
+            errorMessage.style.display = 'flex';
+            
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Show error message (signup)
+        function showSignupError(message) {
+            hideMessages();
+            signupErrorText.textContent = message;
+            signupError.style.display = 'flex';
+            
+            setTimeout(() => {
+                signupError.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Show success message (signup)
+        function showSignupSuccess(message) {
+            hideMessages();
+            signupSuccessText.textContent = message;
+            signupSuccess.style.display = 'flex';
+        }
+        
+        // Hide all messages
+        function hideMessages() {
+            errorMessage.style.display = 'none';
+            signupError.style.display = 'none';
+            signupSuccess.style.display = 'none';
+        }
+        
+        // Show terms modal
+        function showTermsModal() {
+            const termsContent = `
+                <h3 style="color: var(--primary-color); margin-bottom: 15px;">Terms of Service - GDMS</h3>
+                <div style="max-height: 300px; overflow-y: auto; padding-right: 10px;">
+                    <p><strong>1. Account Registration</strong></p>
+                    <p><strong>Public Officials:</strong> Can self-register to declare gifts<br>
+                    <strong>HoA (Head of Agency):</strong> Assigned by ACC Admin<br>
+                    <strong>GDA/GAC:</strong> Assigned by their agency's HoA<br>
+                    <strong>ACC Admin:</strong> System administrators</p>
+                    
+                    <p><strong>2. Gift Declaration</strong></p>
+                    <p>You must declare all gifts received in your official capacity within 24 hours of receipt.</p>
+                    
+                    <p><strong>3. Compliance</strong></p>
+                    <p>You agree to comply with the Gift Rules 2017 and all relevant anti-corruption laws.</p>
+                    
+                    <p><strong>4. Account Verification</strong></p>
+                    <p>Public official accounts require verification by your agency's GDA/HoA before activation.</p>
+                    
+                    <p><strong>5. Data Accuracy</strong></p>
+                    <p>You are responsible for providing accurate and truthful information.</p>
+                </div>
+            `;
+            
+            alert('GDMS Terms of Service:\n\n• Registration ONLY for public officials\n• HoA assigned by ACC Admin\n• GDA/GAC assigned by HoA\n• Gift declaration within 24 hours\n• Account verification required\n\nBy registering, you agree to these terms.');
+        }
+    </script>
+</body>
+</html>

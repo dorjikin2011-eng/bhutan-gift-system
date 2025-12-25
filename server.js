@@ -1,471 +1,333 @@
-// server.js - Vercel-compatible Express server
+// 🎯 GDMS Backend — Online Gift Declaration and Management System
+// 📋 Compliant with The Gift Rules 2017 | Anti-Corruption Commission, Bhutan
+// ✅ Pure Node.js — no browser globals (window/document/localStorage)
+
 const express = require('express');
+const fs = require('fs').promises;
 const path = require('path');
-const fs = require('fs');
 const cors = require('cors');
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.get('/favicon.ico', (req, res) => res.status(204).end());
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public')); // Serves HTML/CSS/JS
 
-// Serve static files from public directory
-app.use(express.static(path.join(__dirname, 'public')));
+// Data directory
+const DATA_DIR = path.join(__dirname, 'data');
+const AGENCIES_FILE = path.join(DATA_DIR, 'agencies.json');
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
+const GIFTS_FILE = path.join(DATA_DIR, 'gifts.json');
 
-// In-memory storage (for demo - in production use a database)
-let gifts = [];
-let penalties = [];
+// Initialize storage
+async function initStorage() {
+  try {
+    await fs.mkdir(DATA_DIR, { recursive: true });
 
-// Initialize with demo data
-function initializeDemoData() {
-    if (gifts.length === 0) {
-        gifts = [
-            {
-                id: 1,
-                description: 'Traditional Thanka painting',
-                value: 5000,
-                date: '2023-10-15',
-                giver: 'Local Artist',
-                status: 'pending',
-                relationship: 'business',
-                circumstances: 'Gift given in appreciation for cultural advice',
-                submittedAt: '2023-10-15T10:30:00Z'
-            },
-            {
-                id: 2,
-                description: 'Book on Bhutanese Culture',
-                value: 800,
-                date: '2023-10-10',
-                giver: 'Brother',
-                status: 'approved',
-                relationship: 'immediate-relative',
-                circumstances: 'Birthday gift from brother',
-                submittedAt: '2023-10-10T14:20:00Z'
-            }
-        ];
+    // Agencies
+    if (!(await fileExists(AGENCIES_FILE))) {
+      await fs.writeFile(AGENCIES_FILE, JSON.stringify([
+        { id: 'ACC', name: 'Anti-Corruption Commission', active: true },
+        { id: 'MOF', name: 'Ministry of Finance', active: true },
+        { id: 'MOE', name: 'Ministry of Education', active: true },
+        { id: 'MOH', name: 'Ministry of Health', active: true },
+        { id: 'MOHA', name: 'Ministry of Home Affairs', active: true }
+      ], null, 2));
     }
-    
-    if (penalties.length === 0) {
-        penalties = [
-            {
-                id: 1,
-                date: '2023-09-15',
-                publicServant: 'Karma Wangdi',
-                breachType: 'Late Declaration (24h rule)',
-                giftValue: 7000,
-                fineAmount: 14000,
-                status: 'unpaid'
-            },
-            {
-                id: 2,
-                date: '2023-08-22',
-                publicServant: 'Choki Dorji',
-                breachType: 'Acceptance from Prohibited Source',
-                giftValue: 12500,
-                fineAmount: 25000,
-                status: 'paid'
-            }
-        ];
+
+    // Users (demo accounts)
+    if (!(await fileExists(USERS_FILE))) {
+      await fs.writeFile(USERS_FILE, JSON.stringify([
+        {
+          id: 'ACC-ADMIN-001',
+          name: 'ACC System Administrator',
+          email: 'acc.admin@acc.gov.bt',
+          password: 'password123',
+          agency_id: 'ACC',
+          agency_name: 'Anti-Corruption Commission',
+          role: 'acc-admin'
+        },
+        {
+          id: 'MOF-HOA-001',
+          name: 'Director',
+          email: 'director@mof.gov.bt',
+          password: 'password123',
+          agency_id: 'MOF',
+          agency_name: 'Ministry of Finance',
+          role: 'hoa'
+        },
+        {
+          id: 'MOF-GDA-001',
+          name: 'Gift Disclosure Administrator',
+          email: 'gda@mof.gov.bt',
+          password: 'password123',
+          agency_id: 'MOF',
+          agency_name: 'Ministry of Finance',
+          role: 'gda'
+        },
+        {
+          id: 'MOF-PS-001',
+          name: 'Tashi Sherpa',
+          email: 'tashi@mof.gov.bt',
+          password: 'password123',
+          agency_id: 'MOF',
+          agency_name: 'Ministry of Finance',
+          role: 'public-servant'
+        }
+      ], null, 2));
     }
+
+    // Gifts
+    if (!(await fileExists(GIFTS_FILE))) {
+      await fs.writeFile(GIFTS_FILE, JSON.stringify([
+        {
+          id: 'GIFT-2025-001',
+          agency_id: 'MOF',
+          declarant_id: 'MOF-PS-001',
+          description: 'Traditional Thanka painting',
+          value: 5000,
+          date_received: '2025-12-20',
+          giver: 'Local Artist',
+          relationship: 'personal',
+          status: 'pending',
+          created_at: new Date().toISOString()
+        },
+        {
+          id: 'GIFT-2025-002',
+          agency_id: 'MOF',
+          declarant_id: 'MOF-PS-001',
+          description: 'Book on Bhutanese Culture',
+          value: 800,
+          date_received: '2025-12-15',
+          giver: 'Brother',
+          relationship: 'immediate-relative',
+          status: 'approved',
+          decision: 'retain',
+          created_at: new Date().toISOString()
+        }
+      ], null, 2));
+    }
+
+    console.log('✅ GDMS data initialized');
+  } catch (err) {
+    console.error('❌ Storage init failed:', err);
+    process.exit(1);
+  }
 }
 
-// Health check endpoint
+// Helper: Check if file exists
+async function fileExists(filePath) {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Auth: Mock login
+function authenticate(email, password) {
+  const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+  return users.find(u => u.email === email && u.password === password);
+}
+
+// Middleware: Require auth
+function requireAuth(req, res, next) {
+  const auth = req.headers.authorization;
+  if (!auth || !auth.startsWith('Bearer ')) {
+    return res.status(401).json({ success: false, error: 'Unauthorized' });
+  }
+
+  const token = auth.split(' ')[1];
+  try {
+    // Parse mock token: "gdms_<user_id>_<timestamp>"
+    const parts = token.split('_');
+    if (parts.length < 3 || parts[0] !== 'gdms') {
+      throw new Error('Invalid token format');
+    }
+    const userId = parts[1];
+    const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+    const user = users.find(u => u.id === userId);
+    if (!user) throw new Error('User not found');
+    req.user = user;
+    next();
+  } catch (err) {
+    res.status(401).json({ success: false, error: 'Invalid token' });
+  }
+}
+
+// Middleware: Require ACC Admin
+function requireAccAdmin(req, res, next) {
+  requireAuth(req, res, () => {
+    if (req.user.role === 'acc-admin') {
+      next();
+    } else {
+      res.status(403).json({ success: false, error: 'ACC Admin access required' });
+    }
+  });
+}
+
+// Middleware: Agency-scoped access
+function requireAgencyAccess(req, res, next) {
+  requireAuth(req, res, () => {
+    // ACC Admin sees all
+    if (req.user.role === 'acc-admin') {
+      return next();
+    }
+    // Agency users: ensure data matches their agency
+    if (req.body.agency_id && req.body.agency_id !== req.user.agency_id) {
+      return res.status(403).json({ success: false, error: 'Agency mismatch' });
+    }
+    next();
+  });
+}
+
+// 🌐 Health check
 app.get('/api/health', (req, res) => {
-    res.json({ 
-        status: 'ok', 
-        service: 'Bhutan Gift Transparency System API',
-        version: '1.0.0',
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development',
-        compliance: 'Gift Rules 2017, Anti-Corruption Commission of Bhutan'
-    });
+  res.json({
+    success: true,
+    status: 'online',
+    timestamp: new Date().toISOString()
+  });
 });
 
-// Get all gifts
-app.get('/api/gifts', (req, res) => {
-    initializeDemoData();
-    res.json({
-        success: true,
-        count: gifts.length,
-        data: gifts
-    });
-});
+// 🔐 Login
+app.post('/api/login', (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ success: false, error: 'Email and password required' });
+  }
 
-// Submit a new gift declaration
-app.post('/api/gifts', (req, res) => {
-    try {
-        const {
-            description,
-            value,
-            receiptDate,
-            giftType,
-            giverName,
-            giverDesignation,
-            giverAgency,
-            relationship,
-            circumstances,
-            disposition,
-            isProhibitedSource
-        } = req.body;
+  const user = authenticate(email, password);
+  if (!user) {
+    return res.status(401).json({ success: false, error: 'Invalid credentials' });
+  }
 
-        // Validation
-        if (!description || !value || !giverName || !relationship || !circumstances) {
-            return res.status(400).json({
-                success: false,
-                error: 'Missing required fields'
-            });
-        }
-
-        const newGift = {
-            id: Date.now(),
-            description,
-            value: parseFloat(value),
-            receiptDate: receiptDate || new Date().toISOString(),
-            giftType: giftType || 'item',
-            giver: {
-                name: giverName,
-                designation: giverDesignation,
-                agency: giverAgency
-            },
-            relationship,
-            circumstances,
-            disposition: disposition || 'In possession of recipient',
-            isProhibitedSource: isProhibitedSource || false,
-            status: 'pending',
-            submittedAt: new Date().toISOString(),
-            reference: `BGTS-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
-        };
-
-        gifts.push(newGift);
-        
-        // Log for debugging
-        console.log('New gift declaration submitted:', {
-            reference: newGift.reference,
-            value: newGift.value,
-            relationship: newGift.relationship
-        });
-
-        res.status(201).json({
-            success: true,
-            message: 'Gift declaration submitted successfully',
-            reference: newGift.reference,
-            data: newGift,
-            reminder: 'Remember: Gifts must be declared within 24 hours of receipt (Rule 27)'
-        });
-
-    } catch (error) {
-        console.error('Error submitting gift:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to submit gift declaration'
-        });
+  // Generate mock token (in prod: JWT)
+  const token = `gdms_${user.id}_${Date.now()}`;
+  res.json({
+    success: true,
+    token: token,
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      agency_id: user.agency_id,
+      agency_name: user.agency_name,
+      role: user.role
     }
+  });
 });
 
-// Get gift by ID
-app.get('/api/gifts/:id', (req, res) => {
-    initializeDemoData();
-    const gift = gifts.find(g => g.id === parseInt(req.params.id));
-    
-    if (!gift) {
-        return res.status(404).json({
-            success: false,
-            error: 'Gift declaration not found'
-        });
+// 🔐 Get current user
+app.get('/api/auth/me', requireAuth, (req, res) => {
+  const { password, ...safeUser } = req.user;
+  res.json({ success: true, user: safeUser });
+});
+
+// 📦 Get gifts (scoped)
+app.get('/api/gifts', requireAgencyAccess, (req, res) => {
+  const gifts = JSON.parse(fs.readFileSync(GIFTS_FILE, 'utf8'));
+  
+  let filtered = gifts;
+  if (req.user.role !== 'acc-admin') {
+    filtered = gifts.filter(g => g.agency_id === req.user.agency_id);
+  }
+  if (req.user.role === 'public-servant') {
+    filtered = filtered.filter(g => g.declarant_id === req.user.id);
+  }
+
+  res.json({ success: true, data: filtered });
+});
+
+// ➕ Declare gift
+app.post('/api/gifts', requireAgencyAccess, (req, res) => {
+  const { description, value, date_received, giver, relationship } = req.body;
+  
+  if (!description || !value || !giver) {
+    return res.status(400).json({ success: false, error: 'Required fields missing' });
+  }
+
+  const newGift = {
+    id: `GIFT-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`,
+    agency_id: req.user.agency_id,
+    declarant_id: req.user.id,
+    description,
+    value: parseFloat(value),
+    date_received: date_received || new Date().toISOString().split('T')[0],
+    giver,
+    relationship: relationship || 'other',
+    status: 'submitted',
+    created_at: new Date().toISOString()
+  };
+
+  const gifts = JSON.parse(fs.readFileSync(GIFTS_FILE, 'utf8'));
+  gifts.push(newGift);
+  fs.writeFileSync(GIFTS_FILE, JSON.stringify(gifts, null, 2));
+
+  res.json({
+    success: true,
+    data: newGift,
+    reference: newGift.id
+  });
+});
+
+// ⚖️ Penalty rules
+app.get('/api/penalties', requireAuth, (req, res) => {
+  res.json({
+    success: true,
+    data: [
+      { breach: 1, multiplier: 2, rule: 'Rule 37(a)' },
+      { breach: 2, multiplier: 5, rule: 'Rule 37(b)' },
+      { breach: 3, multiplier: 10, rule: 'Rule 37(c)' }
+    ]
+  });
+});
+
+// 📊 ACC: National overview
+app.get('/api/acc/overview', requireAccAdmin, (req, res) => {
+  const agencies = JSON.parse(fs.readFileSync(AGENCIES_FILE, 'utf8'));
+  const gifts = JSON.parse(fs.readFileSync(GIFTS_FILE, 'utf8'));
+  
+  res.json({
+    success: true,
+    data: {
+      totalAgencies: agencies.length,
+      activeAgencies: agencies.filter(a => a.active).length,
+      totalDeclarations: gifts.length,
+      pendingReviews: gifts.filter(g => g.status === 'pending').length,
+      nationalCompliance: 84
     }
-    
-    res.json({
-        success: true,
-        data: gift
-    });
+  });
 });
 
-// Calculate penalty
-app.post('/api/calculate-penalty', (req, res) => {
-    try {
-        const { value, breachNumber } = req.body;
-        const numericValue = parseFloat(value) || 0;
-        const breachNum = parseInt(breachNumber) || 1;
-        
-        // Rule 37 multipliers
-        let multiplier;
-        switch(breachNum) {
-            case 1:
-                multiplier = 2; // First offense: 2× value
-                break;
-            case 2:
-                multiplier = 5; // Second offense: 5× value
-                break;
-            default:
-                multiplier = 10; // Third or more: 10× value
-        }
-        
-        const fine = numericValue * multiplier;
-        
-        res.json({
-            success: true,
-            data: {
-                giftValue: numericValue,
-                breachNumber: breachNum,
-                multiplier: multiplier,
-                calculatedFine: fine,
-                formattedFine: `Nu. ${fine.toLocaleString()}`,
-                ruleReference: 'Rule 37: Penalty for breach'
-            }
-        });
-        
-    } catch (error) {
-        console.error('Error calculating penalty:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to calculate penalty'
-        });
-    }
+// 🖥️ Serve frontend
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Check prohibited source
-app.post('/api/check-source', (req, res) => {
-    try {
-        const { relationship } = req.body;
-        
-        if (!relationship) {
-            return res.status(400).json({
-                success: false,
-                error: 'Relationship is required'
-            });
-        }
-        
-        const results = {
-            // Prohibited sources (Rule 8)
-            'seeks-action': {
-                title: 'PROHIBITED SOURCE',
-                description: 'This giver is a prohibited source under Rule 8(a).',
-                details: 'Who seeks official action or business from the public servant\'s agency.',
-                isProhibited: true,
-                rule: 'Rule 8(a)',
-                action: 'Cannot accept gifts from this source'
-            },
-            'does-business': {
-                title: 'PROHIBITED SOURCE',
-                description: 'This giver is a prohibited source under Rule 8(b).',
-                details: 'Who does business or seeks to do business with the public servant\'s agency.',
-                isProhibited: true,
-                rule: 'Rule 8(b)',
-                action: 'Cannot accept gifts from this source'
-            },
-            'regulated': {
-                title: 'PROHIBITED SOURCE',
-                description: 'This giver is a prohibited source under Rule 8(c).',
-                details: 'Who conducts activities regulated by the public servant\'s agency.',
-                isProhibited: true,
-                rule: 'Rule 8(c)',
-                action: 'Cannot accept gifts from this source'
-            },
-            'affected': {
-                title: 'PROHIBITED SOURCE',
-                description: 'This giver is a prohibited source under Rule 8(d).',
-                details: 'Who has interests that may be affected by performance or non-performance of the public servant\'s official duties.',
-                isProhibited: true,
-                rule: 'Rule 8(d)',
-                action: 'Cannot accept gifts from this source'
-            },
-            // Exceptions (Rule 11)
-            'immediate-relative': {
-                title: 'ALLOWED (with conditions)',
-                description: 'Gifts from immediate relatives are allowed.',
-                details: 'When clearly motivated by the relationship rather than the official position.',
-                isProhibited: false,
-                rule: 'Rule 11(b)',
-                action: 'May accept if clearly personal in nature'
-            },
-            'personal-friend': {
-                title: 'ALLOWED (with conditions)',
-                description: 'Gifts based on personal relationships may be allowed.',
-                details: 'When clearly motivated by the personal relationship rather than official position.',
-                isProhibited: false,
-                rule: 'Rule 11(a)',
-                action: 'May accept if clearly personal in nature'
-            },
-            'colleague': {
-                title: 'RESTRICTED',
-                description: 'Gifts between public servants are generally prohibited.',
-                details: 'Limited exceptions for special occasions of nominal value.',
-                isProhibited: true,
-                rule: 'Rule 12',
-                action: 'Generally cannot accept, except for special occasions'
-            }
-        };
-        
-        const result = results[relationship] || {
-            title: 'REVIEW REQUIRED',
-            description: 'This relationship requires further review.',
-            details: 'Please consult with your Gift Disclosure Administrator.',
-            isProhibited: null,
-            rule: 'General review required',
-            action: 'Submit for review by HoA/Gift Administration Committee'
-        };
-        
-        res.json({
-            success: true,
-            data: result,
-            timestamp: new Date().toISOString()
-        });
-        
-    } catch (error) {
-        console.error('Error checking source:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to check prohibited source'
-        });
-    }
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-// Get all penalties
-app.get('/api/penalties', (req, res) => {
-    initializeDemoData();
-    res.json({
-        success: true,
-        count: penalties.length,
-        data: penalties
-    });
+app.get('/acc-dashboard.html', requireAccAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'acc-dashboard.html'));
 });
 
-// Get nominal value information
-app.get('/api/nominal-value', (req, res) => {
-    // Assuming national minimum wage of Nu. 3,750 per month (example)
-    const dailyWage = 3750 / 30; // ~125 per day
-    const nominalValueLimit = dailyWage * 10; // 10 days' wage
-    
-    res.json({
-        success: true,
-        data: {
-            dailyMinimumWage: Math.round(dailyWage),
-            nominalValueLimit: Math.round(nominalValueLimit),
-            ruleReference: 'Rule 47(h): Nominal value means an amount not more than ten days\' national minimum wage',
-            description: 'Gifts of nominal value may be accepted under certain conditions'
-        }
-    });
+// 404
+app.use('*', (req, res) => {
+  res.status(404).json({ success: false, error: 'Not found' });
 });
 
-// Get gift rules summary
-app.get('/api/rules/summary', (req, res) => {
-    res.json({
-        success: true,
-        data: {
-            title: 'Gift Rules 2017 Summary',
-            rules: [
-                {
-                    rule: 'Rule 6',
-                    title: 'Prohibition',
-                    description: 'A public servant shall not solicit or accept a gift from a prohibited source.'
-                },
-                {
-                    rule: 'Rule 8',
-                    title: 'Prohibited Sources',
-                    description: 'Includes those seeking official action, doing business, regulated by, or affected by the agency.'
-                },
-                {
-                    rule: 'Rule 11',
-                    title: 'Exceptions',
-                    description: 'Gifts from immediate relatives or based on personal relationships may be allowed.'
-                },
-                {
-                    rule: 'Rule 27',
-                    title: 'Declaration Timeline',
-                    description: 'Gifts must be declared within 24 hours of receipt.'
-                },
-                {
-                    rule: 'Rule 37',
-                    title: 'Penalties',
-                    description: 'Fines: 1st offense 2× value, 2nd 5×, 3rd+ 10× value.'
-                }
-            ],
-            source: 'Anti-Corruption Commission of Bhutan, Gift Rules 2017'
-        }
-    });
+// Start server
+initStorage().then(() => {
+  app.listen(PORT, () => {
+    console.log(`✅ GDMS Server running on http://localhost:${PORT}`);
+    console.log(`🔗 API: http://localhost:${PORT}/api/health`);
+    console.log(`📝 Demo: acc.admin@acc.gov.bt / password123`);
+  });
+}).catch(err => {
+  console.error('❌ Server startup failed:', err);
 });
-
-// Handle 404 for API routes
-app.use('/api/*', (req, res) => {
-    res.status(404).json({
-        success: false,
-        error: 'API endpoint not found',
-        availableEndpoints: [
-            'GET  /api/health',
-            'GET  /api/gifts',
-            'POST /api/gifts',
-            'GET  /api/gifts/:id',
-            'POST /api/calculate-penalty',
-            'POST /api/check-source',
-            'GET  /api/penalties',
-            'GET  /api/nominal-value',
-            'GET  /api/rules/summary'
-        ]
-    });
-});
-
-// Serve SPA - handle all other routes by serving index.html
-app.get('*', (req, res) => {
-    // Don't interfere with API routes
-    if (req.path.startsWith('/api/')) {
-        return res.status(404).json({
-            success: false,
-            error: 'API endpoint not found'
-        });
-    }
-    
-    // For all other routes, serve the frontend
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error('Server error:', err);
-    res.status(500).json({
-        success: false,
-        error: 'Internal server error',
-        message: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
-});
-
-// Export the Express app for Vercel serverless
-module.exports = app;
-
-// For local development, start the server
-if (require.main === module) {
-    const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => {
-        console.log(`
-╔══════════════════════════════════════════════════════════════════════╗
-║                                                                      ║
-║   🇧🇹  BHUTAN GIFT TRANSPARENCY SYSTEM (BGTS)                       ║
-║   📋  Compliant with Gift Rules 2017                                ║
-║   🏛️   Anti-Corruption Commission of Bhutan                        ║
-║                                                                      ║
-╠══════════════════════════════════════════════════════════════════════╣
-║                                                                      ║
-║   ✅  Server running on port ${PORT}                               ║
-║   🌐  Local: http://localhost:${PORT}                              ║
-║   🚀  Mode: ${process.env.VERCEL ? 'Vercel Serverless' : 'Local'}  ║
-║                                                                      ║
-║   📡  API Endpoints:                                                ║
-║   • GET    /api/health              - Health check                 ║
-║   • GET    /api/gifts               - List gift declarations       ║
-║   • POST   /api/gifts               - Submit new declaration       ║
-║   • POST   /api/calculate-penalty   - Calculate penalty            ║
-║   • POST   /api/check-source        - Check prohibited source      ║
-║   • GET    /api/penalties           - List penalties               ║
-║                                                                      ║
-║   🛑  Press Ctrl+C to stop                                         ║
-║                                                                      ║
-╚══════════════════════════════════════════════════════════════════════╝
-        `);
-        
-        // Initialize demo data
-        initializeDemoData();
-        console.log('📊 Demo data initialized');
-    });
-}

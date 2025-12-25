@@ -1,804 +1,2687 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bhutan Gift Transparency System</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Online Gift Declaration and Management System (GDMS)</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎁</text></svg>">
+  <style>
+    :root {
+      --gdms-blue: #1a5f7a;
+      --gdms-teal: #159895;
+      --gdms-accent: #57c5b6;
+      --gdms-gold: #d97706;
+      --gdms-green: #059669;
+      --gdms-red: #dc2626;
+    }
 
-    <link rel="icon" href="data:,">
+    /* Loading Screen */
+    #loading-screen {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(135deg, var(--gdms-blue), var(--gdms-teal));
+      display: flex; flex-direction: column; justify-content: center;
+      align-items: center; z-index: 9999; transition: opacity 0.5s ease;
+    }
+    .loading-spinner {
+      width: 60px; height: 60px; border: 5px solid rgba(255,255,255,0.3);
+      border-radius: 50%; border-top-color: white; animation: spin 1s ease-in-out infinite;
+      margin-bottom: 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: white; font-size: 1.2rem; margin-top: 10px; }
+
+    /* Role Badge */
+    .role-badge {
+      display: inline-block; padding: 3px 8px; border-radius: 12px;
+      font-size: 0.75rem; font-weight: 600; margin-left: 8px;
+    }
+    .role-hoa { background: #28a745; color: white; }
+    .role-gda { background: #17a2b8; color: white; }
+    .role-public-servant { background: #6c757d; color: white; }
+    .role-gac-member { background: #6610f2; color: white; }
+
+    /* Agency Badge */
+    .agency-badge {
+      display: inline-block; padding: 2px 8px;
+      background: #e3f2fd; color: var(--gdms-blue);
+      border-radius: 10px; font-size: 0.75rem; font-weight: 500;
+      margin-left: 5px;
+    }
+
+    /* Stat Card */
+    .stat-card {
+      background: white; border-radius: 12px; padding: 1.25rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: all 0.2s;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    /* Action Button */
+    .action-btn {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 1rem; 
+      background: linear-gradient(135deg, var(--gdms-blue), var(--gdms-teal));
+      color: white; border: none; border-radius: 10px;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.3s;
+    }
+    .action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(26, 95, 122, 0.2);
+    }
+    .action-btn i { font-size: 1.5rem; margin-bottom: 0.5rem; }
+
+    /* Status Badge */
+    .status-badge {
+      padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 500;
+    }
+    .status-pending { background: #fff3cd; color: #856404; }
+    .status-approved { background: #d4edda; color: #155724; }
+    .status-returned { background: #f8d7da; color: #721c24; }
+    .status-active { background: #d4edda; color: #155724; }
+    .status-inactive { background: #f8d7da; color: #721c24; }
+    .status-waiting { background: #cce5ff; color: #004085; }
+
+    /* Connection Status */
+    #connection-status {
+      position: fixed; bottom: 10px; right: 10px; padding: 8px 15px;
+      border-radius: 20px; font-size: 0.8rem; z-index: 1000;
+      background: #fff3cd; color: #856404; border: 1px solid #ffeaa7;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    /* Role Dashboard */
+    .role-dashboard { display: none; }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
     
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    .modal.active {
+      display: flex;
+    }
+    
+    .modal-content {
+      background-color: white;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 800px;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: modalFadeIn 0.3s ease;
+    }
+    
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid #dee2e6;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .modal-header h3 {
+      color: var(--gdms-blue);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #6c757d;
+    }
+    
+    .modal-body {
+      padding: 20px;
+    }
+    
+    .modal-footer {
+      padding: 20px;
+      border-top: 1px solid #dee2e6;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* Form Styles */
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #333;
+    }
+    
+    .form-control {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 1rem;
+      transition: border-color 0.3s;
+    }
+    
+    .form-control:focus {
+      outline: none;
+      border-color: var(--gdms-blue);
+      box-shadow: 0 0 0 3px rgba(26, 95, 122, 0.1);
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+    }
+
+    /* Table Styles */
+    .table-container {
+      overflow-x: auto;
+    }
+    
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 600px;
+    }
+    
+    .table th {
+      background-color: #f8f9fa;
+      padding: 12px 15px;
+      text-align: left;
+      font-weight: 600;
+      color: #333;
+      border-bottom: 1px solid #dee2e6;
+      white-space: nowrap;
+    }
+    
+    .table td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .table tr:hover {
+      background-color: #f8f9fa;
+    }
+    
+    .table tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Button Styles */
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s;
+    }
+    
+    .btn-primary {
+      background: var(--gdms-blue);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #0d4d63;
+    }
+    
+    .btn-success {
+      background: #28a745;
+      color: white;
+    }
+    
+    .btn-success:hover {
+      background: #1e7e34;
+    }
+    
+    .btn-danger {
+      background: #dc3545;
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: #bd2130;
+    }
+    
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+    
+    .btn-secondary:hover {
+      background: #545b62;
+    }
+
+    /* Page Transitions */
+    .page {
+      display: none;
+      animation: fadeIn 0.5s ease;
+    }
+    
+    .page.active {
+      display: block;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Alert Styles */
+    .alert {
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .alert-success {
+      background-color: #d4edda;
+      color: #155724;
+      border-left: 4px solid #c3e6cb;
+    }
+    
+    .alert-error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border-left: 4px solid #f5c6cb;
+    }
+    
+    .alert-warning {
+      background-color: #fff3cd;
+      color: #856404;
+      border-left: 4px solid #ffeaa7;
+    }
+    
+    .alert-info {
+      background-color: #d1ecf1;
+      color: #0c5460;
+      border-left: 4px solid #bee5eb;
+    }
+
+    /* File Upload Styles */
+    .file-upload-container {
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      padding: 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: #f8f9fa;
+    }
+    
+    .file-upload-container:hover {
+      border-color: var(--gdms-blue);
+      background: #f0f7ff;
+    }
+    
+    .file-upload-container.dragover {
+      border-color: var(--gdms-blue);
+      background: #e3f2fd;
+      transform: scale(1.02);
+    }
+    
+    .file-preview {
+      margin-top: 15px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    
+    .file-preview-item {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid #ddd;
+    }
+    
+    .file-preview-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .file-preview-item .remove-file {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: rgba(220, 53, 69, 0.9);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Gift Image Gallery */
+    .gift-images {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    .gift-image-item {
+      position: relative;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid #ddd;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+    
+    .gift-image-item:hover {
+      transform: scale(1.05);
+    }
+    
+    .gift-image-item img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+    }
+    
+    /* Role-specific declaration notice */
+    .role-declaration-notice {
+      background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+      border-left: 4px solid var(--gdms-blue);
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+    
+    .role-declaration-notice h4 {
+      color: var(--gdms-blue);
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+  </style>
 </head>
-<body>
-    <!-- Header -->
-    <header>
-        <div class="container header-content">
-            <div class="logo">
-                <i class="fas fa-gift"></i>
-                <div>
-                    <h1>BGTS <small>Bhutan Gift Transparency System</small></h1>
-                </div>
-            </div>
-            <div class="user-menu">
-                <div class="avatar">TS</div>
-                <div>
-                    <div style="font-weight: 500;">Tashi Sherpa</div>
-                    <div style="font-size: 0.8rem; opacity: 0.9;">Public Servant</div>
-                </div>
-                <i class="fas fa-bell notification-icon">
-                    <span class="notification-badge">3</span>
-                </i>
-            </div>
-        </div>
-    </header>
-    
-    <!-- Navigation -->
-    <div class="nav-tabs">
-        <a href="#" class="nav-tab active" data-page="dashboard">
-            <i class="fas fa-home"></i> Dashboard
-        </a>
-        <a href="#" class="nav-tab" data-page="declare">
-            <i class="fas fa-plus-circle"></i> Declare Gift
-        </a>
-        <a href="#" class="nav-tab" data-page="my-gifts">
-            <i class="fas fa-gifts"></i> My Gifts
-        </a>
-        <a href="#" class="nav-tab" data-page="review">
-            <i class="fas fa-clipboard-check"></i> Review Gifts
-        </a>
-        <a href="#" class="nav-tab" data-page="register">
-            <i class="fas fa-book"></i> Gift Register
-        </a>
-        <a href="#" class="nav-tab" data-page="penalties">
-            <i class="fas fa-exclamation-triangle"></i> Penalties
-        </a>
-        <a href="#" class="nav-tab" data-page="knowledge">
-            <i class="fas fa-info-circle"></i> Guidance
-        </a>
-    </div>
-    
-    <!-- Main Content -->
-    <div class="container main-content">
-        <!-- Dashboard Page -->
-        <div id="dashboard" class="page active">
-            <div class="stats-cards">
-                <div class="stat-card">
-                    <i class="fas fa-gift"></i>
-                    <div class="stat-value">7</div>
-                    <div class="stat-label">Gifts Declared</div>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-clock"></i>
-                    <div class="stat-value">2</div>
-                    <div class="stat-label">Pending Review</div>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-check-circle"></i>
-                    <div class="stat-value">4</div>
-                    <div class="stat-label">Approved</div>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <div class="stat-value">1</div>
-                    <div class="stat-label">Returned</div>
-                </div>
-            </div>
-            
-            <div class="quick-actions">
-                <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
-                <div class="action-buttons">
-                    <a href="#" class="action-btn" data-page="declare">
-                        <i class="fas fa-plus-circle"></i>
-                        <span>Declare New Gift</span>
-                    </a>
-                    <a href="#" class="action-btn" data-page="my-gifts">
-                        <i class="fas fa-history"></i>
-                        <span>View My Declarations</span>
-                    </a>
-                    <a href="#" class="action-btn" data-page="knowledge">
-                        <i class="fas fa-question-circle"></i>
-                        <span>Gift Rules Guide</span>
-                    </a>
-                    <a href="#" class="action-btn" id="check-prohibited-btn">
-                        <i class="fas fa-ban"></i>
-                        <span>Check Prohibited Source</span>
-                    </a>
-                </div>
-            </div>
-            
-            <div class="recent-activity">
-                <h3><i class="fas fa-history"></i> Recent Activity</h3>
-                <ul class="activity-list">
-                    <li class="activity-item">
-                        <div class="activity-icon">
-                            <i class="fas fa-gift"></i>
-                        </div>
-                        <div class="activity-details">
-                            <h4>Gift Declared</h4>
-                            <p>Traditional Thanka painting from local artist</p>
-                        </div>
-                        <div class="activity-time">2 hours ago</div>
-                    </li>
-                    <li class="activity-item">
-                        <div class="activity-icon approved">
-                            <i class="fas fa-check"></i>
-                        </div>
-                        <div class="activity-details">
-                            <h4>Gift Approved</h4>
-                            <p>Book gift from immediate relative</p>
-                        </div>
-                        <div class="activity-time">1 day ago</div>
-                    </li>
-                    <li class="activity-item">
-                        <div class="activity-icon returned">
-                            <i class="fas fa-undo"></i>
-                        </div>
-                        <div class="activity-details">
-                            <h4>Gift Returned</h4>
-                            <p>Watch from contractor - prohibited source</p>
-                        </div>
-                        <div class="activity-time">3 days ago</div>
-                    </li>
-                    <li class="activity-item">
-                        <div class="activity-icon">
-                            <i class="fas fa-bell"></i>
-                        </div>
-                        <div class="activity-details">
-                            <h4>Reminder</h4>
-                            <p>24-hour declaration deadline approaching</p>
-                        </div>
-                        <div class="activity-time">5 days ago</div>
-                    </li>
-                </ul>
-            </div>
-        </div>
+<body class="bg-gray-50">
+    <!-- Authentication Check - Add this at the beginning of index.html -->
+<script>
+    // Check if user is authenticated
+    function checkAuthentication() {
+        const user = localStorage.getItem('gdms_user');
+        const token = localStorage.getItem('gdms_token');
         
-        <!-- Declare Gift Page -->
-        <div id="declare" class="page">
-            <div class="form-container">
-                <h2 class="form-title"><i class="fas fa-plus-circle"></i> Declare New Gift</h2>
-                <p class="declaration-warning">
-                    <i class="fas fa-exclamation-circle"></i> Remember: You must declare gifts within 24 hours of receipt (Rule 27)
+        if (!user || !token) {
+            // Not authenticated, redirect to login page
+            console.log('❌ No authentication found, redirecting to login...');
+            window.location.href = 'login.html';
+            return null;
+        }
+        
+        try {
+            return JSON.parse(user);
+        } catch (e) {
+            console.error('Error parsing user data:', e);
+            window.location.href = 'login.html';
+            return null;
+        }
+    }
+
+    // Run authentication check on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const user = checkAuthentication();
+        
+        if (!user) {
+            // Already redirected to login page
+            return;
+        }
+        
+        console.log('✅ User authenticated:', user.name);
+        
+        // Modify the initializeApp function in your index.html to use the authenticated user
+        // Replace the mockData.currentUser with the actual authenticated user
+        const originalInitializeApp = window.initializeApp;
+        
+        window.initializeApp = function() {
+            // Use the authenticated user instead of mock data
+            const authenticatedUser = {
+                name: user.name || "Authenticated User",
+                role: user.role || "public",
+                agency: user.agency || "Government Agency",
+                employeeId: user.employeeId || "EMP001",
+                avatar: user.name ? user.name.split(' ').map(n => n[0]).join('') : "AU",
+                position: user.position || "Government Officer"
+            };
+            
+            // Update mockData with authenticated user
+            mockData.currentUser = authenticatedUser;
+            
+            // Call original initializeApp
+            originalInitializeApp();
+        };
+    });
+</script>
+  <!-- Loading Screen -->
+  <div id="loading-screen">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Loading GDMS...</div>
+    <div style="color: rgba(255,255,255,0.7); margin-top: 10px; font-size: 0.9rem;">
+      Checking authentication...
+    </div>
+  </div>
+
+  <!-- User Info Bar -->
+  <div id="user-info-bar" class="bg-gray-100 px-6 py-3 border-b flex justify-between items-center" style="display: none;">
+    <div class="flex items-center space-x-4">
+      <div class="user-avatar w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-teal-600 flex items-center justify-center text-white font-bold">U</div>
+      <div>
+        <h4 id="user-name" class="font-medium text-gray-900">Loading...</h4>
+        <p class="text-sm text-gray-600">
+          <span id="user-role">Loading...</span>
+          <span id="user-agency" class="agency-badge">Loading...</span>
+        </p>
+      </div>
+    </div>
+    <button id="logout-button" class="px-4 py-2 bg-red-600 text-white rounded-md flex items-center gap-2 hover:bg-red-700">
+      <i class="fas fa-sign-out-alt"></i> Logout
+    </button>
+  </div>
+
+  <!-- Header -->
+  <header id="main-header" class="bg-white shadow-sm border-b" style="display: none;">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <div class="bg-red-600 text-white p-2 rounded">
+          <i class="fas fa-gift text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold text-gray-900">GDMS</h1>
+          <p class="text-xs text-gray-500">Online Gift Declaration and Management System</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-4">
+        <div class="flex items-center space-x-2">
+          <div id="header-avatar" class="w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-teal-600 flex items-center justify-center text-white text-sm font-bold">TS</div>
+          <div class="text-right">
+            <div class="font-medium text-gray-900" id="header-user-name">Tashi Sherpa</div>
+            <div class="text-xs text-gray-500" id="header-user-role">Public Servant</div>
+          </div>
+        </div>
+        <div class="relative">
+          <i class="fas fa-bell text-gray-500 text-xl"></i>
+          <span class="notification-badge absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation -->
+  <nav id="main-navigation" class="bg-white border-b" style="display: none;">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="flex space-x-1 py-2">
+        <a href="#" class="nav-tab flex items-center px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 border-transparent hover:bg-gray-50" data-page="dashboard">
+          <i class="fas fa-home mr-2"></i> Dashboard
+        </a>
+        <a href="#" class="nav-tab flex items-center px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 border-transparent hover:bg-gray-50" data-page="declare">
+          <i class="fas fa-plus-circle mr-2"></i> Declare Gift
+        </a>
+        <a href="#" class="nav-tab flex items-center px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 border-transparent hover:bg-gray-50" data-page="my-gifts">
+          <i class="fas fa-gifts mr-2"></i> My Gifts
+        </a>
+        <a href="#" class="nav-tab flex items-center px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 border-transparent hover:bg-gray-50" data-page="review">
+          <i class="fas fa-clipboard-check mr-2"></i> Review Gifts
+        </a>
+        <a href="#" class="nav-tab flex items-center px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 border-transparent hover:bg-gray-50" data-page="register">
+          <i class="fas fa-book mr-2"></i> Gift Register
+        </a>
+        <a href="#" class="nav-tab flex items-center px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 border-transparent hover:bg-gray-50" data-page="penalties">
+          <i class="fas fa-exclamation-triangle mr-2"></i> Penalties
+        </a>
+        <a href="#" class="nav-tab flex items-center px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 border-transparent hover:bg-gray-50" data-page="knowledge">
+          <i class="fas fa-info-circle mr-2"></i> Guidance
+        </a>
+        <!-- Only show for HoA and GDA -->
+        <a href="#" class="nav-tab flex items-center px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 border-transparent hover:bg-gray-50" data-page="users" style="display: none;">
+          <i class="fas fa-users mr-2"></i> Manage Users
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main id="main-content" class="max-w-7xl mx-auto px-6 py-8" style="display: none;">
+
+    <!-- DASHBOARD PAGE -->
+    <div id="dashboard" class="page active">
+      <!-- PUBLIC OFFICIAL DASHBOARD -->
+      <div id="ps-dashboard" class="role-dashboard" style="display: none;">
+        <div class="mb-6">
+          <h2 class="text-2xl font-bold text-gray-900">Public Official Dashboard</h2>
+          <p class="text-gray-600">Welcome! Declare gifts received within 24 hours as per Gift Rules 2017.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div class="stat-card">
+            <i class="fas fa-gift text-blue-600 text-2xl mb-2"></i>
+            <div class="stat-value text-2xl font-bold text-gray-900" id="ps-total-declarations">0</div>
+            <div class="text-sm text-gray-600">My Declarations</div>
+          </div>
+          <div class="stat-card">
+            <i class="fas fa-clock text-yellow-600 text-2xl mb-2"></i>
+            <div class="stat-value text-2xl font-bold text-gray-900" id="ps-pending-count">0</div>
+            <div class="text-sm text-gray-600">Pending Review</div>
+          </div>
+          <div class="stat-card">
+            <i class="fas fa-check-circle text-green-600 text-2xl mb-2"></i>
+            <div class="stat-value text-2xl font-bold text-gray-900" id="ps-approved-count">0</div>
+            <div class="text-sm text-gray-600">Approved</div>
+          </div>
+          <div class="stat-card">
+            <i class="fas fa-exclamation-triangle text-red-600 text-2xl mb-2"></i>
+            <div class="stat-value text-2xl font-bold text-gray-900" id="ps-returned-count">0</div>
+            <div class="text-sm text-gray-600">Returned</div>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow mb-8">
+          <h3 class="text-lg font-bold text-gray-900 mb-4"><i class="fas fa-bolt mr-2"></i> Quick Actions</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <button class="action-btn" onclick="navigateTo('declare')">
+              <i class="fas fa-plus-circle"></i>
+              <span>Declare New Gift</span>
+            </button>
+            <button class="action-btn" onclick="navigateTo('my-gifts')">
+              <i class="fas fa-history"></i>
+              <span>View My Declarations</span>
+            </button>
+            <button class="action-btn" onclick="navigateTo('knowledge')">
+              <i class="fas fa-question-circle"></i>
+              <span>Gift Rules Guide</span>
+            </button>
+            <button class="action-btn" id="check-prohibited-btn">
+              <i class="fas fa-ban"></i>
+              <span>Check Prohibited Source</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow">
+          <h3 class="text-lg font-bold text-gray-900 mb-4"><i class="fas fa-history mr-2"></i> Recent Activity</h3>
+          <ul class="space-y-4" id="ps-recent-activity">
+            <li class="flex">
+              <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-4">
+                <i class="fas fa-gift text-blue-600"></i>
+              </div>
+              <div class="flex-1">
+                <h4 class="font-medium">Welcome to GDMS!</h4>
+                <p class="text-sm text-gray-600">Your account is active. Start declaring gifts received.</p>
+                <p class="text-xs text-gray-500 mt-1">Just now</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- GDA DASHBOARD -->
+      <div id="gda-dashboard" class="role-dashboard" style="display: none;">
+        <div class="bg-gradient-to-r from-blue-600 to-teal-600 rounded-lg p-6 text-white mb-8">
+          <h2 class="text-2xl font-bold">Gift Disclosure Administrator</h2>
+          <p class="opacity-90">Agency: <span id="gda-agency-name">Ministry of Finance</span></p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div class="stat-card">
+            <p class="text-sm text-gray-500">My Declarations</p>
+            <p class="text-3xl font-bold text-gray-900" id="gda-personal-declarations">0</p>
+            <div class="mt-2 text-xs text-blue-600">
+              <i class="fas fa-user-circle mr-1"></i> Personal submissions
+            </div>
+          </div>
+          <div class="stat-card">
+            <p class="text-sm text-gray-500">Pending Reviews</p>
+            <p class="text-3xl font-bold text-gray-900" id="gda-pending-count">0</p>
+            <div class="mt-2 text-xs text-yellow-600">
+              <i class="fas fa-exclamation-circle mr-1"></i> Requires action within 5 days (Rule 25a)
+            </div>
+          </div>
+          <div class="stat-card">
+            <p class="text-sm text-gray-500">Self-Registered Users</p>
+            <p class="text-3xl font-bold text-gray-900" id="gda-new-users-count">0</p>
+            <div class="mt-2 text-xs text-blue-600">
+              <i class="fas fa-user-plus mr-1"></i> Awaiting activation
+            </div>
+          </div>
+          <div class="stat-card">
+            <p class="text-sm text-gray-500">Today's Submissions</p>
+            <p class="text-3xl font-bold text-gray-900" id="gda-today-submissions">0</p>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow mb-8">
+          <h3 class="text-lg font-bold text-gray-900 mb-4"><i class="fas fa-tasks mr-2"></i> Quick Actions</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <button class="action-btn" onclick="navigateTo('declare')">
+              <i class="fas fa-gift"></i>
+              <span>Declare Gift</span>
+            </button>
+            <button class="action-btn" onclick="navigateTo('review')">
+              <i class="fas fa-clipboard-check"></i>
+              <span>Review Declarations</span>
+            </button>
+            <button class="action-btn" onclick="navigateTo('users')">
+              <i class="fas fa-user-check"></i>
+              <span>Activate Users</span>
+            </button>
+            <button class="action-btn" onclick="navigateTo('register')">
+              <i class="fas fa-book"></i>
+              <span>Update Gift Register</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Self-Registered Users Section (GDA can see) -->
+        <div class="bg-white p-6 rounded-lg shadow mb-8">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold text-gray-900"><i class="fas fa-user-plus mr-2"></i> Self-Registered Users</h3>
+            <button class="btn btn-primary" onclick="navigateTo('users')">
+              <i class="fas fa-users"></i> View All
+            </button>
+          </div>
+          <div id="gda-new-users-list" class="space-y-4">
+            <p class="text-gray-500 text-center py-8">No self-registered users awaiting activation.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="font-bold text-gray-800 mb-4"><i class="fas fa-exclamation-triangle text-yellow-500 mr-2"></i> Urgent Actions</h3>
+            <ul class="space-y-3" id="gda-urgent-actions">
+              <li class="flex items-start">
+                <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                <span>No urgent actions required.</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="font-bold text-gray-800 mb-4"><i class="fas fa-history text-gray-500 mr-2"></i> Recent Gifts for Review</h3>
+            <ul class="space-y-3" id="gda-recent-gifts">
+              <li class="text-gray-500">No gifts pending review.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- HoA DASHBOARD -->
+      <div id="hoa-dashboard" class="role-dashboard" style="display: none;">
+        <div class="bg-gradient-to-r from-blue-600 to-teal-600 rounded-lg p-6 text-white mb-8">
+          <h2 class="text-2xl font-bold">Head of Agency Dashboard</h2>
+          <p class="mt-1 opacity-90">Agency: <span id="hoa-agency-name">Ministry of Finance</span></p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div class="stat-card">
+            <p class="text-sm text-gray-500">My Declarations</p>
+            <p class="text-3xl font-bold text-gray-900" id="hoa-personal-declarations">0</p>
+            <div class="mt-2 text-xs text-blue-600">
+              <i class="fas fa-user-tie mr-1"></i> Personal gifts declared
+            </div>
+          </div>
+          <div class="stat-card">
+            <p class="text-sm text-gray-500">Pending My Decision</p>
+            <p class="text-3xl font-bold text-gray-900" id="hoa-pending-decisions">0</p>
+            <div class="mt-2">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                <i class="fas fa-exclamation-circle mr-1"></i> Requires Action
+              </span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <p class="text-sm text-gray-500">Agency Compliance Rate</p>
+            <div class="flex items-baseline mt-1">
+              <p class="text-3xl font-bold text-gray-900" id="hoa-compliance-rate">0%</p>
+              <span class="ml-2 text-green-600 font-medium">✓ Good</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3 mt-2">
+              <div class="bg-green-500 h-3 rounded-full" id="hoa-compliance-bar" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <p class="text-sm text-gray-500">New Users Awaiting</p>
+            <p class="text-3xl font-bold text-gray-900 mt-1" id="hoa-new-users">0</p>
+            <p class="text-xs text-gray-500 mt-1">Self-registered public officials</p>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow mb-8">
+          <h3 class="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <button class="action-btn" onclick="navigateTo('declare')">
+              <i class="fas fa-gift"></i>
+              <span>Declare Gift</span>
+            </button>
+            <button class="action-btn" onclick="navigateTo('review')">
+              <i class="fas fa-gavel"></i>
+              <span>Review Pending Gifts</span>
+            </button>
+            <button class="action-btn" onclick="navigateTo('users')">
+              <i class="fas fa-user-check"></i>
+              <span>Approve Users</span>
+            </button>
+            <button class="action-btn" onclick="showModal('Designate GDA', 'Appoint Gift Disclosure Administrator (Rule 19a)')">
+              <i class="fas fa-user-plus"></i>
+              <span>Assign GDA/GAC</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-white p-6 rounded-lg shadow border-l-4 border-yellow-500">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <i class="fas fa-users text-yellow-500 text-xl mt-1"></i>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-medium text-gray-900">GAC Meeting Required</h3>
+                <p class="mt-2 text-sm text-gray-600">
+                  <span id="hoa-gac-meeting-count">0</span> gifts involving the Head of Agency require Committee review per <strong>Rule 21(a)</strong>.
                 </p>
-                
-                <form id="gift-declaration-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label" for="gift-description">Gift Description *</label>
-                            <textarea class="form-control" id="gift-description" rows="3" placeholder="Describe the gift in detail" required></textarea>
-                            <div class="form-help">Be specific about type, brand, material, etc.</div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="gift-value">Estimated Fair Market Value (Nu.) *</label>
-                            <input type="number" class="form-control" id="gift-value" min="0" step="0.01" placeholder="0.00" required>
-                            <div class="form-help">Based on retail cost of similar item (Rule 47(e))</div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label" for="receipt-date">Date of Receipt *</label>
-                            <input type="datetime-local" class="form-control" id="receipt-date" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="gift-type">Gift Type</label>
-                            <select class="form-control" id="gift-type">
-                                <option value="">Select type</option>
-                                <option value="cash">Cash</option>
-                                <option value="item">Physical Item</option>
-                                <option value="voucher">Gift Voucher</option>
-                                <option value="experience">Experience/Hospitality</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <h3 class="section-title">Gift Giver Information</h3>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label" for="giver-name">Giver's Name *</label>
-                            <input type="text" class="form-control" id="giver-name" placeholder="Full name" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="giver-designation">Giver's Designation</label>
-                            <input type="text" class="form-control" id="giver-designation" placeholder="Job title/position">
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label" for="giver-agency">Giver's Agency/Organization</label>
-                            <input type="text" class="form-control" id="giver-agency" placeholder="Company/Organization name">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="relationship">Relationship with Giver *</label>
-                            <select class="form-control" id="relationship" required>
-                                <option value="">Select relationship</option>
-                                <option value="immediate-relative">Immediate Relative (Rule 47(l))</option>
-                                <option value="personal-friend">Personal Friend</option>
-                                <option value="colleague">Colleague/Public Servant</option>
-                                <option value="business">Business Associate</option>
-                                <option value="contractor">Contractor/Service Provider</option>
-                                <option value="foreign">Foreign Government</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label" for="giver-address">Giver's Address/Contact</label>
-                        <input type="text" class="form-control" id="giver-address" placeholder="Address, phone, or email">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label" for="circumstances">Circumstances of Gift Acceptance *</label>
-                        <textarea class="form-control" id="circumstances" rows="3" placeholder="Explain why you accepted the gift and the context" required></textarea>
-                        <div class="form-help">Describe the occasion and why it's permissible under Gift Rules (Rule 11, 14)</div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label" for="disposition">Current Disposition/Location of Gift *</label>
-                        <textarea class="form-control" id="disposition" rows="2" placeholder="Where is the gift currently kept?" required></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="prohibited-check">
-                            <label for="prohibited-check">Check if giver is a prohibited source (Rule 8)</label>
-                        </div>
-                        <div class="form-help">Prohibited sources include those seeking official action, doing business with your agency, or regulated by your agency.</div>
-                    </div>
-                    
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-secondary" id="save-draft-btn">
-                            <i class="fas fa-save"></i> Save as Draft
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-paper-plane"></i> Submit Declaration
-                        </button>
-                    </div>
-                </form>
+                <div class="mt-4">
+                  <button class="px-4 py-2 bg-yellow-600 text-white text-sm rounded-md hover:bg-yellow-700"
+                          onclick="showModal('GAC Convened', 'Committee meeting scheduled')">
+                    Convene GAC
+                  </button>
+                </div>
+              </div>
             </div>
+          </div>
+
+          <div class="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <i class="fas fa-file-contract text-blue-500 text-xl mt-1"></i>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-medium text-gray-900">Annual Audit Due</h3>
+                <p class="mt-2 text-sm text-gray-600">
+                  FY 2025–26 gift administration audit report (<strong>Rule 31</strong>) due to RAA by <strong>31 March 2026</strong>.
+                </p>
+                <div class="mt-4">
+                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <i class="fas fa-calendar mr-2"></i> Deadline: 2026-03-31
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        
-        <!-- My Gifts Page -->
-        <div id="my-gifts" class="page">
-            <div class="form-container">
-                <h2 class="form-title"><i class="fas fa-gifts"></i> My Gift Declarations</h2>
-                
-                <div class="filter-buttons">
-                    <button class="btn btn-secondary filter-btn active" data-filter="all">All</button>
-                    <button class="btn btn-secondary filter-btn" data-filter="pending">Pending</button>
-                    <button class="btn btn-secondary filter-btn" data-filter="approved">Approved</button>
-                    <button class="btn btn-secondary filter-btn" data-filter="returned">Returned</button>
-                </div>
-                
-                <div class="table-container">
-                    <table class="table" id="my-gifts-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Description</th>
-                                <th>Value (Nu.)</th>
-                                <th>Giver</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr data-status="pending">
-                                <td>2023-10-15</td>
-                                <td>Traditional Thanka painting</td>
-                                <td>5,000</td>
-                                <td>Local Artist</td>
-                                <td><span class="status-badge status-pending">Under Review</span></td>
-                                <td><button class="btn btn-secondary view-gift-btn" style="padding: 5px 10px; font-size: 0.85rem;">View</button></td>
-                            </tr>
-                            <tr data-status="approved">
-                                <td>2023-10-10</td>
-                                <td>Book on Bhutanese Culture</td>
-                                <td>800</td>
-                                <td>Brother (Immediate Relative)</td>
-                                <td><span class="status-badge status-approved">Approved</span></td>
-                                <td><button class="btn btn-secondary view-gift-btn" style="padding: 5px 10px; font-size: 0.85rem;">View</button></td>
-                            </tr>
-                            <tr data-status="returned">
-                                <td>2023-10-05</td>
-                                <td>Watch</td>
-                                <td>15,000</td>
-                                <td>ABC Construction Co.</td>
-                                <td><span class="status-badge status-returned">Returned</span></td>
-                                <td><button class="btn btn-secondary view-gift-btn" style="padding: 5px 10px; font-size: 0.85rem;">View</button></td>
-                            </tr>
-                            <tr data-status="approved">
-                                <td>2023-09-28</td>
-                                <td>Framed Certificate</td>
-                                <td>2,500</td>
-                                <td>Ministry of Education</td>
-                                <td><span class="status-badge status-approved">Approved</span></td>
-                                <td><button class="btn btn-secondary view-gift-btn" style="padding: 5px 10px; font-size: 0.85rem;">View</button></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+      </div>
+
+      <!-- GAC MEMBER DASHBOARD -->
+      <div id="gac-dashboard" class="role-dashboard" style="display: none;">
+        <div class="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg p-6 text-white mb-8">
+          <h2 class="text-2xl font-bold">Gift Administration Committee</h2>
+          <p class="opacity-90">Agency: <span id="gac-agency-name">Ministry of Finance</span></p>
         </div>
-        
-        <!-- Review Gifts Page (GDA/HoA/Committee view) -->
-        <div id="review" class="page">
-            <div class="form-container">
-                <h2 class="form-title"><i class="fas fa-clipboard-check"></i> Gift Review Dashboard</h2>
-                <p class="role-indicator">You are viewing as <strong>Gift Disclosure Administrator (GDA)</strong></p>
-                
-                <div class="table-container">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Declarant</th>
-                                <th>Gift Description</th>
-                                <th>Value (Nu.)</th>
-                                <th>Giver</th>
-                                <th>Relationship</th>
-                                <th>Days Left</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Tashi Sherpa</td>
-                                <td>Traditional Thanka painting</td>
-                                <td>5,000</td>
-                                <td>Local Artist</td>
-                                <td>Business Associate</td>
-                                <td><span class="days-left warning">3</span></td>
-                                <td>
-                                    <button class="btn btn-primary review-gift-btn" data-id="1" style="padding: 5px 10px; font-size: 0.85rem;">Review</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Dorji Wangchuk</td>
-                                <td>Conference Bag with Accessories</td>
-                                <td>3,500</td>
-                                <td>Tech Solutions Ltd.</td>
-                                <td>Contractor</td>
-                                <td><span class="days-left danger">1</span></td>
-                                <td>
-                                    <button class="btn btn-primary review-gift-btn" data-id="2" style="padding: 5px 10px; font-size: 0.85rem;">Review</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Pema Lhamo</td>
-                                <td>Handwoven Kira</td>
-                                <td>8,000</td>
-                                <td>Sister</td>
-                                <td>Immediate Relative</td>
-                                <td><span class="days-left success">5</span></td>
-                                <td>
-                                    <button class="btn btn-primary review-gift-btn" data-id="3" style="padding: 5px 10px; font-size: 0.85rem;">Review</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="guidance-box">
-                    <h3><i class="fas fa-clipboard-list"></i> Review Guidelines</h3>
-                    <ul>
-                        <li>Check if giver is a <strong>prohibited source</strong> (Rule 8)</li>
-                        <li>Verify if gift is from <strong>immediate relative</strong> or based on <strong>personal relationship</strong> (Rule 11)</li>
-                        <li>Determine if gift is of <strong>nominal value</strong> (≤10 days' national minimum wage)</li>
-                        <li>Review for potential <strong>conflict of interest</strong></li>
-                        <li>Make decision within <strong>5 working days</strong> (Rule 33)</li>
-                    </ul>
-                </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div class="stat-card">
+            <p class="text-sm text-gray-500">My Declarations</p>
+            <p class="text-3xl font-bold text-gray-900" id="gac-personal-declarations">0</p>
+            <div class="mt-2 text-xs text-purple-600">
+              <i class="fas fa-user-circle mr-1"></i> Personal submissions
             </div>
+          </div>
+          <div class="stat-card">
+            <p class="text-sm text-gray-500">HoA Gifts Pending Review</p>
+            <p class="text-3xl font-bold text-gray-900" id="gac-hoa-pending">0</p>
+            <p class="text-xs text-gray-500">Rule 21(a) — Committee Decision Required</p>
+          </div>
+          <div class="stat-card">
+            <p class="text-sm text-gray-500">Next Meeting</p>
+            <p class="text-3xl font-bold text-gray-900">28 Dec 2025</p>
+          </div>
         </div>
-        
-        <!-- Gift Register Page -->
-        <div id="register" class="page">
-            <div class="form-container">
-                <h2 class="form-title"><i class="fas fa-book"></i> Gift Register (Annexure II)</h2>
-                <p class="register-description">Maintained by Gift Disclosure Administrator - Records retained for 5 years (Rule 32)</p>
-                
-                <div class="register-controls">
-                    <div class="controls-left">
-                        <button class="btn btn-secondary">
-                            <i class="fas fa-download"></i> Export to Excel
-                        </button>
-                        <button class="btn btn-secondary">
-                            <i class="fas fa-print"></i> Print Register
-                        </button>
-                    </div>
-                    <div class="controls-right">
-                        <input type="text" class="form-control search-input" placeholder="Search in register...">
-                    </div>
-                </div>
-                
-                <div class="table-container">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>SI No.</th>
-                                <th>Name</th>
-                                <th>Designation</th>
-                                <th>Gift Description</th>
-                                <th>Date</th>
-                                <th>Source</th>
-                                <th>Value (Nu.)</th>
-                                <th>Disposition</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>1</td>
-                                <td>Tashi Sherpa</td>
-                                <td>Officer</td>
-                                <td>Traditional Thanka</td>
-                                <td>2023-10-15</td>
-                                <td>Local Artist</td>
-                                <td>5,000</td>
-                                <td>Under Review</td>
-                            </tr>
-                            <tr>
-                                <td>2</td>
-                                <td>Dorji Wangchuk</td>
-                                <td>Supervisor</td>
-                                <td>Conference Bag</td>
-                                <td>2023-10-12</td>
-                                <td>Tech Solutions Ltd.</td>
-                                <td>3,500</td>
-                                <td>Pending Return</td>
-                            </tr>
-                            <tr>
-                                <td>3</td>
-                                <td>Pema Lhamo</td>
-                                <td>Director</td>
-                                <td>Handwoven Kira</td>
-                                <td>2023-10-10</td>
-                                <td>Sister</td>
-                                <td>8,000</td>
-                                <td>Retained</td>
-                            </tr>
-                            <tr>
-                                <td>4</td>
-                                <td>Karma Dorji</td>
-                                <td>Assistant</td>
-                                <td>Book on Governance</td>
-                                <td>2023-10-05</td>
-                                <td>Immediate Relative</td>
-                                <td>800</td>
-                                <td>Retained</td>
-                            </tr>
-                            <tr>
-                                <td>5</td>
-                                <td>Sonam Yangchen</td>
-                                <td>Manager</td>
-                                <td>Pen Set</td>
-                                <td>2023-09-30</td>
-                                <td>Foreign Government</td>
-                                <td>2,000</td>
-                                <td>Agency Use</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="register-footer">
-                    Showing 5 of 42 records. Register maintained as per Rule 25(b).
-                </div>
-            </div>
+
+        <div class="bg-white p-6 rounded-lg shadow mb-8">
+          <h3 class="text-lg font-bold text-gray-900 mb-4"><i class="fas fa-bolt mr-2"></i> Quick Actions</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <button class="action-btn" onclick="navigateTo('declare')">
+              <i class="fas fa-gift"></i>
+              <span>Declare Gift</span>
+            </button>
+            <button class="action-btn" onclick="navigateTo('review')">
+              <i class="fas fa-users"></i>
+              <span>Start Committee Review</span>
+            </button>
+            <button class="action-btn" onclick="navigateTo('my-gifts')">
+              <i class="fas fa-history"></i>
+              <span>View My Declarations</span>
+            </button>
+          </div>
         </div>
-        
-        <!-- Penalties Page -->
-        <div id="penalties" class="page">
-            <div class="form-container">
-                <h2 class="form-title"><i class="fas fa-exclamation-triangle"></i> Penalty Management</h2>
-                <p class="penalty-description">Penalties for breaches of Gift Rules (Chapter VII)</p>
-                
-                <div class="penalty-calculator">
-                    <h4><i class="fas fa-calculator"></i> Penalty Calculator</h4>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Gift Value (Nu.)</label>
-                            <input type="number" class="form-control" id="penalty-value" placeholder="Enter gift value" value="5000">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Breach Number</label>
-                            <select class="form-control" id="breach-number">
-                                <option value="1">First Offense</option>
-                                <option value="2">Second Offense</option>
-                                <option value="3">Third or More</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Calculated Fine</label>
-                            <div class="fine-display" id="calculated-fine">
-                                Nu. 10,000
-                            </div>
-                        </div>
-                    </div>
-                    <div class="calculator-help">
-                        <strong>Rule 37:</strong> 1st offense: 2× value, 2nd offense: 5× value, 3rd+ offense: 10× value
-                    </div>
-                </div>
-                
-                <h3 class="penalty-list-title">Recent Penalties Issued</h3>
-                <div class="table-container">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Public Servant</th>
-                                <th>Breach Type</th>
-                                <th>Gift Value</th>
-                                <th>Fine Amount</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>2023-09-15</td>
-                                <td>Karma Wangdi</td>
-                                <td>Late Declaration (24h rule)</td>
-                                <td>7,000</td>
-                                <td>14,000</td>
-                                <td><span class="status-badge status-pending">Unpaid</span></td>
-                            </tr>
-                            <tr>
-                                <td>2023-08-22</td>
-                                <td>Choki Dorji</td>
-                                <td>Acceptance from Prohibited Source</td>
-                                <td>12,500</td>
-                                <td>25,000</td>
-                                <td><span class="status-badge status-approved">Paid</span></td>
-                            </tr>
-                            <tr>
-                                <td>2023-07-10</td>
-                                <td>Lhamo Yangki</td>
-                                <td>Failure to Declare</td>
-                                <td>3,000</td>
-                                <td>6,000</td>
-                                <td><span class="status-badge status-approved">Paid</span></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+
+        <div class="bg-white p-6 rounded-lg shadow">
+          <h3 class="font-bold text-gray-800 mb-4"><i class="fas fa-history text-gray-500 mr-2"></i> Recent Committee Decisions</h3>
+          <ul class="space-y-4" id="gac-recent-decisions">
+            <li class="flex items-center">
+              <i class="fas fa-check-circle text-green-500 mr-3"></i>
+              <span class="text-gray-700">No recent decisions made.</span>
+            </li>
+          </ul>
         </div>
-        
-        <!-- Knowledge Base Page -->
-        <div id="knowledge" class="page">
-            <div class="form-container">
-                <h2 class="form-title"><i class="fas fa-info-circle"></i> Gift Rules Guidance</h2>
-                
-                <div class="rules-summary">
-                    <h3><i class="fas fa-book"></i> Key Rules Summary</h3>
-                    
-                    <div class="rules-grid">
-                        <div class="rule-card prohibited">
-                            <h4>Prohibited Sources (Rule 8)</h4>
-                            <ul>
-                                <li>Those seeking official action from your agency</li>
-                                <li>Those doing business with your agency</li>
-                                <li>Those regulated by your agency</li>
-                                <li>Those whose interests may be affected by your duties</li>
-                            </ul>
-                        </div>
-                        
-                        <div class="rule-card allowed">
-                            <h4>Exceptions (Rule 11)</h4>
-                            <ul>
-                                <li>Gifts from immediate relatives</li>
-                                <li>Gifts based on personal relationships</li>
-                                <li>Opportunities available to the general public</li>
-                                <li>Nominal value gifts on special occasions</li>
-                            </ul>
-                        </div>
-                        
-                        <div class="rule-card definitions">
-                            <h4>Key Definitions</h4>
-                            <ul>
-                                <li><strong>Nominal Value:</strong> ≤10 days' national minimum wage</li>
-                                <li><strong>Immediate Relative:</strong> Spouse, parents, siblings, lineal ascendants/descendants</li>
-                                <li><strong>Fair Market Value:</strong> Retail cost of similar item</li>
-                                <li><strong>Gift:</strong> Anything of economic value with no consideration in return</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="timelines-section">
-                    <h3><i class="fas fa-clock"></i> Critical Timelines</h3>
-                    <div class="table-container">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Action</th>
-                                    <th>Timeline</th>
-                                    <th>Rule Reference</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Gift Declaration</td>
-                                    <td><strong>Within 24 hours</strong> of receipt</td>
-                                    <td>Rule 27</td>
-                                </tr>
-                                <tr>
-                                    <td>Gift Return (if prohibited)</td>
-                                    <td><strong>Within 5 working days</strong> of report</td>
-                                    <td>Rule 33(b)</td>
-                                </tr>
-                                <tr>
-                                    <td>Record Retention</td>
-                                    <td><strong>5 years</strong></td>
-                                    <td>Rule 32</td>
-                                </tr>
-                                <tr>
-                                    <td>Access to Disclosure</td>
-                                    <td><strong>Within 5 working days</strong> of application</td>
-                                    <td>Rule 29</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                
-                <div class="faq-section">
-                    <h3><i class="fas fa-question-circle"></i> Frequently Asked Questions</h3>
-                    
-                    <div class="faq-item">
-                        <h4>Can I accept gifts from family members?</h4>
-                        <p>Yes, gifts from immediate relatives are allowed if clearly motivated by the relationship rather than your official position (Rule 11(b)).</p>
-                    </div>
-                    
-                    <div class="faq-item">
-                        <h4>What is considered "nominal value"?</h4>
-                        <p>Nominal value is an amount not more than ten days' national minimum wage (Rule 47(h)). You must check the current minimum wage.</p>
-                    </div>
-                    
-                    <div class="faq-item">
-                        <h4>What happens if I miss the 24-hour declaration deadline?</h4>
-                        <p>You may be subject to penalties under Rule 36-37. It's important to declare as soon as possible even if late.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <p>Bhutan Gift Transparency System (BGTS) | Compliant with Gift Rules 2017</p>
-            <p>Anti-Corruption Commission, Royal Government of Bhutan | <i class="fas fa-phone"></i> +975-2-334863/64/66/67/68/69</p>
-            <p class="footer-slogan">Fighting Corruption is a Collective Responsibility</p>
-        </div>
-    </footer>
-    
-    <!-- Modals -->
-    <!-- Prohibited Source Checker Modal -->
-    <div class="modal" id="prohibited-source-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-ban"></i> Prohibited Source Checker</h3>
-                <button class="modal-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <p>Check if a gift giver falls under prohibited sources (Rule 8):</p>
-                
-                <div class="form-group">
-                    <label class="form-label">Giver's Relationship to Your Agency</label>
-                    <select class="form-control" id="source-check">
-                        <option value="">Select relationship</option>
-                        <option value="seeks-action">Seeks official action/business from agency</option>
-                        <option value="does-business">Does business with agency</option>
-                        <option value="regulated">Regulated by agency</option>
-                        <option value="affected">Interests affected by your duties</option>
-                        <option value="family">Immediate relative</option>
-                        <option value="friend">Personal friend</option>
-                        <option value="colleague">Colleague/public servant</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
-                
-                <div id="check-result" class="check-result">
-                    <h4 id="result-title"></h4>
-                    <p id="result-desc"></p>
-                    <div id="result-rule" class="result-rule"></div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary modal-close">Cancel</button>
-                <button class="btn btn-primary" id="check-source-btn">Check Source</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Gift Review Modal -->
-    <div class="modal" id="review-gift-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fas fa-clipboard-check"></i> Review Gift Declaration</h3>
-                <button class="modal-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="gift-review-summary">
-                    <h4>Traditional Thanka Painting</h4>
-                    <p><strong>Declared by:</strong> Tashi Sherpa | <strong>Value:</strong> Nu. 5,000</p>
-                    <p><strong>Giver:</strong> Local Artist | <strong>Relationship:</strong> Business Associate</p>
-                    <p><strong>Circumstances:</strong> Gift given in appreciation for cultural advice provided</p>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Review Decision *</label>
-                    <select class="form-control" id="review-decision">
-                        <option value="">Select decision</option>
-                        <option value="approve">Approve Retention</option>
-                        <option value="return">Return to Giver</option>
-                        <option value="agency-use">Retain for Agency Use</option>
-                        <option value="dispose">Dispose as Govt. Property</option>
-                        <option value="more-info">Request More Information</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Comments/Justification</label>
-                    <textarea class="form-control" id="review-comments" rows="3" placeholder="Provide justification for your decision..."></textarea>
-                    <div class="form-help">This will be recorded in the gift register and shared with the declarant.</div>
-                </div>
-                
-                <div class="review-checklist">
-                    <h4>Review Checklist</h4>
-                    <div class="checklist-items">
-                        <label>
-                            <input type="checkbox">
-                            <span>Giver is not a prohibited source (Rule 8)</span>
-                        </label>
-                        <label>
-                            <input type="checkbox">
-                            <span>Gift is permissible under exceptions (Rule 11, 14)</span>
-                        </label>
-                        <label>
-                            <input type="checkbox">
-                            <span>No conflict of interest identified</span>
-                        </label>
-                        <label>
-                            <input type="checkbox">
-                            <span>Declaration submitted within 24 hours</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary modal-close">Cancel</button>
-                <button class="btn btn-primary" id="submit-review-btn">Submit Decision</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Success Modal -->
-    <div class="modal" id="success-modal">
-        <div class="modal-content">
-            <div class="modal-header success">
-                <h3><i class="fas fa-check-circle"></i> Success!</h3>
-                <button class="modal-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <p id="success-message">Your gift declaration has been submitted successfully.</p>
-                <p class="success-details">You will receive a confirmation and tracking number shortly.</p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-success modal-close">OK</button>
-            </div>
-        </div>
+      </div>
+
     </div>
 
-    <script src="script.js"></script>
+    <!-- DECLARE GIFT PAGE -->
+    <div id="declare" class="page">
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-900">Declare a Gift</h2>
+        <p class="text-gray-600">Submit details of a gift received within <strong>24 hours</strong> as required by Rule 13.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2">
+          <div class="bg-white rounded-lg shadow p-6">
+            <!-- Role-specific declaration notice -->
+            <div class="role-declaration-notice" id="role-notice">
+              <h4><i class="fas fa-info-circle"></i> Declaration as <span id="declarant-role-display">Public Official</span></h4>
+              <p id="role-specific-message">Your declaration will be reviewed by your agency's GDA.</p>
+            </div>
+            
+            <div id="alert-container" class="mb-6"></div>
+
+            <form id="gift-declaration-form">
+              <div class="form-group">
+                <label class="form-label">Date Gift Received <span class="text-red-600">*</span></label>
+                <input type="date" class="form-control" id="gift-date" required>
+                <p class="text-xs text-gray-500 mt-1">Must be within the last 24 hours per Rule 13.</p>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Value of Gift (Nu.) <span class="text-red-600">*</span></label>
+                  <input type="number" class="form-control" id="gift-value" min="0" step="0.01" required>
+                  <p class="text-xs text-gray-500 mt-1">Total monetary value in Ngultrum</p>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Category <span class="text-red-600">*</span></label>
+                  <select class="form-control" id="gift-category" required>
+                    <option value="">Select Category</option>
+                    <option value="cash">Cash</option>
+                    <option value="kind">In-kind</option>
+                    <option value="service">Service/Favour</option>
+                    <option value="entertainment">Entertainment</option>
+                    <option value="travel">Travel/Hospitality</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Description of Gift <span class="text-red-600">*</span></label>
+                <textarea class="form-control" id="gift-description" rows="3" required placeholder="Describe the gift in detail..."></textarea>
+              </div>
+
+              <!-- GIFT PHOTOS/UPLOAD SECTION -->
+              <div class="form-group">
+                <label class="form-label">Upload Gift Photos (Optional)</label>
+                <p class="text-xs text-gray-500 mb-2">Upload clear photos of the gift. Maximum 5 photos, 5MB each. Supported formats: JPG, PNG, GIF.</p>
+                
+                <div class="file-upload-container" id="file-upload-area">
+                  <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                  <p class="font-medium text-gray-700">Drag & drop photos here</p>
+                  <p class="text-sm text-gray-500">or click to browse</p>
+                  <input type="file" id="gift-photos" accept="image/*" multiple style="display: none;">
+                </div>
+                
+                <div class="file-preview" id="file-preview-container">
+                  <!-- File previews will be added here -->
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Source/Donor <span class="text-red-600">*</span></label>
+                <input type="text" class="form-control" id="gift-source" required placeholder="Name of donor or source">
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Relationship with Donor <span class="text-red-600">*</span></label>
+                  <select class="form-control" id="donor-relationship" required>
+                    <option value="">Select Relationship</option>
+                    <option value="family">Family Member</option>
+                    <option value="friend">Friend/Personal Acquaintance</option>
+                    <option value="business">Business Associate</option>
+                    <option value="subordinate">Subordinate Staff</option>
+                    <option value="foreign">Foreign Entity</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Occasion (if any)</label>
+                  <input type="text" class="form-control" id="gift-occasion" placeholder="e.g., Wedding, Promotion, etc.">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Current Location/Handling</label>
+                <textarea class="form-control" id="gift-location" rows="2" placeholder="Where is the gift currently kept?"></textarea>
+              </div>
+
+              <div class="form-group">
+                <div class="flex items-center">
+                  <input type="checkbox" id="prohibited-check" class="mr-2" required>
+                  <label for="prohibited-check" class="text-gray-700">I confirm this gift is not from a prohibited source (Rule 6)</label>
+                </div>
+              </div>
+
+              <div class="flex justify-end space-x-3 mt-8">
+                <button type="button" class="btn btn-secondary" onclick="navigateTo('dashboard')">
+                  <i class="fas fa-times mr-2"></i> Cancel
+                </button>
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-paper-plane mr-2"></i> Submit Declaration
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="space-y-6">
+          <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+            <h4 class="font-bold text-blue-800 mb-2"><i class="fas fa-info-circle mr-2"></i> Important Notice</h4>
+            <p class="text-sm text-blue-700">
+              • <strong>Rule 13:</strong> Declare within 24 hours of receipt<br>
+              • <strong>Rule 14:</strong> Value threshold applies<br>
+              • <strong>Rule 6:</strong> Prohibited sources are illegal<br>
+              • False declaration may lead to penalties<br>
+              • Photos help verify gift authenticity
+            </p>
+          </div>
+
+          <div class="bg-white rounded-lg shadow p-5">
+            <h4 class="font-bold text-gray-800 mb-3">Recent Declarations</h4>
+            <ul class="space-y-3" id="recent-declarations-list">
+              <li class="text-gray-500 text-sm">No recent declarations</li>
+            </ul>
+          </div>
+
+          <div class="bg-white rounded-lg shadow p-5">
+            <h4 class="font-bold text-gray-800 mb-3">Photo Guidelines</h4>
+            <ul class="space-y-2 text-sm text-gray-600">
+              <li><i class="fas fa-camera text-green-500 mr-2"></i> Take clear, well-lit photos</li>
+              <li><i class="fas fa-ruler-combined text-blue-500 mr-2"></i> Include scale (ruler/coin) for size reference</li>
+              <li><i class="fas fa-tag text-purple-500 mr-2"></i> Show any labels or branding</li>
+              <li><i class="fas fa-box-open text-orange-500 mr-2"></i> Include packaging if applicable</li>
+              <li><i class="fas fa-ban text-red-500 mr-2"></i> No faces of people in photos</li>
+            </ul>
+          </div>
+
+          <div class="bg-white rounded-lg shadow p-5">
+            <h4 class="font-bold text-gray-800 mb-3">Review Process</h4>
+            <div id="review-process-info" class="text-sm text-gray-600">
+              <p>Your gift will be reviewed according to your role:</p>
+              <ul class="mt-2 space-y-1">
+                <li id="review-step-1">• Reviewed by GDA within 5 working days</li>
+                <li id="review-step-2">• Final decision by HoA</li>
+                <li id="review-step-3" class="hidden">• Committee review for HoA gifts</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MY GIFTS PAGE -->
+    <div id="my-gifts" class="page">
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-900">My Gift Declarations</h2>
+        <p class="text-gray-600">View and track the status of your submitted gift declarations.</p>
+      </div>
+
+      <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+        <div class="p-4 border-b flex justify-between items-center">
+          <div class="flex space-x-2">
+            <button class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm" onclick="loadMyGifts('all')">
+              <i class="fas fa-list mr-2"></i> All
+            </button>
+            <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm" onclick="loadMyGifts('pending')">
+              <i class="fas fa-clock mr-2"></i> Pending
+            </button>
+            <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm" onclick="loadMyGifts('approved')">
+              <i class="fas fa-check-circle mr-2"></i> Approved
+            </button>
+            <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm" onclick="loadMyGifts('returned')">
+              <i class="fas fa-times-circle mr-2"></i> Returned
+            </button>
+          </div>
+          <div>
+            <span class="text-sm text-gray-500">Total: <span id="total-gifts-count">0</span> declarations</span>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Ref No.</th>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Value</th>
+                <th>Photos</th>
+                <th>Status</th>
+                <th>Review Stage</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="my-gifts-table-body">
+              <tr>
+                <td colspan="8" class="text-center py-8 text-gray-500">
+                  <i class="fas fa-gift text-3xl mb-2 block text-gray-300"></i>
+                  No gift declarations found
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="p-4 border-t text-sm text-gray-500">
+          <i class="fas fa-info-circle mr-2"></i> Declarations are reviewed according to your role and agency procedures.
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white rounded-lg shadow p-5">
+          <h4 class="font-bold text-gray-800 mb-3"><i class="fas fa-chart-line mr-2"></i> Declaration History</h4>
+          <div class="space-y-4">
+            <div>
+              <div class="flex justify-between text-sm mb-1">
+                <span>This Month</span>
+                <span id="this-month-count">0</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-blue-500 h-2 rounded-full" id="this-month-bar" style="width: 0%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between text-sm mb-1">
+                <span>Last Month</span>
+                <span id="last-month-count">0</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-green-500 h-2 rounded-full" id="last-month-bar" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-5">
+          <h4 class="font-bold text-gray-800 mb-3"><i class="fas fa-exclamation-triangle mr-2 text-yellow-500"></i> Attention Required</h4>
+          <div id="attention-required-list" class="space-y-3">
+            <p class="text-gray-500 text-sm">No actions required at this time.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REVIEW GIFTS PAGE -->
+    <div id="review" class="page">
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-900">Review Gift Declarations</h2>
+        <p class="text-gray-600" id="review-role-info">
+          Review and process gift declarations submitted by public officials.
+        </p>
+      </div>
+
+      <div id="review-content">
+        <!-- Content will be populated by JavaScript based on role -->
+        <div class="text-center py-12 text-gray-500">
+          <i class="fas fa-clipboard-check text-4xl mb-4"></i>
+          <p>Loading review interface...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- GIFT REGISTER PAGE -->
+    <div id="register" class="page">
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-900">Gift Register</h2>
+        <p class="text-gray-600">Official record of all gift declarations as per Rule 28.</p>
+      </div>
+
+      <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+        <div class="p-4 border-b flex justify-between items-center">
+          <div class="flex items-center space-x-4">
+            <div>
+              <h3 class="font-bold text-gray-800">Agency Gift Register</h3>
+              <p class="text-sm text-gray-500">Maintained by GDA, audited by RAA annually</p>
+            </div>
+            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+              <i class="fas fa-shield-alt mr-2"></i> Official Record
+            </span>
+          </div>
+          <div class="flex space-x-2">
+            <button class="btn btn-primary" onclick="showModal('Add Entry', 'Manually add a gift to the register')">
+              <i class="fas fa-plus mr-2"></i> Add Entry
+            </button>
+            <button class="btn btn-secondary">
+              <i class="fas fa-download mr-2"></i> Export
+            </button>
+          </div>
+        </div>
+
+        <div class="p-4 border-b bg-gray-50">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Financial Year</label>
+              <select class="form-control">
+                <option>2025-26</option>
+                <option>2024-25</option>
+                <option>2023-24</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <select class="form-control">
+                <option>All Status</option>
+                <option>Approved</option>
+                <option>Returned</option>
+                <option>Deposited</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Value Range</label>
+              <select class="form-control">
+                <option>All Values</option>
+                <option>Below Nu. 5,000</option>
+                <option>Nu. 5,000 - 10,000</option>
+                <option>Above Nu. 10,000</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+              <div class="relative">
+                <input type="text" class="form-control pl-10" placeholder="Search...">
+                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Reg. No.</th>
+                <th>Date</th>
+                <th>Official</th>
+                <th>Description</th>
+                <th>Value</th>
+                <th>Photos</th>
+                <th>Disposition</th>
+                <th>GDA Decision</th>
+                <th>HoA Decision</th>
+              </tr>
+            </thead>
+            <tbody id="register-table-body">
+              <tr>
+                <td colspan="9" class="text-center py-8 text-gray-500">
+                  <i class="fas fa-book text-3xl mb-2 block text-gray-300"></i>
+                  No entries in the gift register
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PENALTIES PAGE -->
+    <div id="penalties" class="page">
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-900">Penalty Management</h2>
+        <p class="text-gray-600">Monitor and process penalties for non-compliance with Gift Rules.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div class="stat-card">
+          <div class="flex items-center">
+            <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mr-4">
+              <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Pending Penalties</p>
+              <p class="text-2xl font-bold text-gray-900">0</p>
+            </div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="flex items-center">
+            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+              <i class="fas fa-check-circle text-green-600 text-xl"></i>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Collected (This FY)</p>
+              <p class="text-2xl font-bold text-gray-900">Nu. 0</p>
+            </div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="flex items-center">
+            <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mr-4">
+              <i class="fas fa-clock text-yellow-600 text-xl"></i>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Overdue</p>
+              <p class="text-2xl font-bold text-gray-900">0</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+        <div class="p-4 border-b">
+          <h3 class="font-bold text-gray-800">Penalty Cases</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Case ID</th>
+                <th>Official</th>
+                <th>Violation</th>
+                <th>Rule</th>
+                <th>Amount</th>
+                <th>Due Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="penalties-table-body">
+              <tr>
+                <td colspan="8" class="text-center py-8 text-gray-500">
+                  <i class="fas fa-scale-balanced text-3xl mb-2 block text-gray-300"></i>
+                  No penalty cases found
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- GUIDANCE PAGE -->
+    <div id="knowledge" class="page">
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-900">Guidance & Resources</h2>
+        <p class="text-gray-600">Learn about the Gift Rules 2017 and declaration procedures.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2">
+          <div class="space-y-6">
+            <div class="bg-white rounded-lg shadow p-6">
+              <h3 class="text-xl font-bold text-gray-900 mb-4">Gift Rules 2017 - Key Provisions</h3>
+              <div class="space-y-4">
+                <div class="border-l-4 border-blue-500 pl-4 py-2">
+                  <h4 class="font-bold text-gray-800">Rule 6: Prohibited Sources</h4>
+                  <p class="text-gray-600">Gifts cannot be accepted from foreign governments, persons with official dealings, or subordinate staff.</p>
+                </div>
+                <div class="border-l-4 border-green-500 pl-4 py-2">
+                  <h4 class="font-bold text-gray-800">Rule 13: Declaration Timeline</h4>
+                  <p class="text-gray-600">Must declare within 24 hours of receipt. Electronic declaration via GDMS is mandatory.</p>
+                </div>
+                <div class="border-l-4 border-yellow-500 pl-4 py-2">
+                  <h4 class="font-bold text-gray-800">Rule 19: Head of Agency Role</h4>
+                  <p class="text-gray-600">HoA must designate GDA, constitute GAC, and make final decisions on gift retention.</p>
+                </div>
+                <div class="border-l-4 border-red-500 pl-4 py-2">
+                  <h4 class="font-bold text-gray-800">Rule 21a: GAC Review for HoA Gifts</h4>
+                  <p class="text-gray-600">Gifts received by HoA must be reviewed by Gift Administration Committee.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-6">
+          <div class="bg-white rounded-lg shadow p-5">
+            <h4 class="font-bold text-gray-800 mb-4">Photo Documentation Tips</h4>
+            <ul class="space-y-3">
+              <li class="flex items-start">
+                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                <span>Take multiple angles of the gift</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                <span>Include close-ups of labels/branding</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                <span>Show gift in context (unopened, in packaging)</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                <span>Good lighting is essential for clarity</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+            <h4 class="font-bold text-blue-800 mb-2">Need Help?</h4>
+            <p class="text-sm text-blue-700">
+              Contact your agency's Gift Disclosure Administrator (GDA) for questions about declaration process or photo requirements.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MANAGE USERS PAGE -->
+    <div id="users" class="page">
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-900">User Management</h2>
+        <p class="text-gray-600">Manage user accounts and permissions within your agency.</p>
+      </div>
+
+      <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+        <div class="p-4 border-b flex justify-between items-center">
+          <div class="flex items-center space-x-4">
+            <div>
+              <h3 class="font-bold text-gray-800">Agency Users</h3>
+              <p class="text-sm text-gray-500">Active: <span id="active-users-count">0</span> | Pending: <span id="pending-users-count">0</span></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 border-b bg-gray-50">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">User Status</label>
+              <select class="form-control" id="user-status-filter">
+                <option value="all">All Users</option>
+                <option value="active">Active Only</option>
+                <option value="pending">Pending Approval</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+              <select class="form-control" id="user-role-filter">
+                <option value="all">All Roles</option>
+                <option value="public">Public Official</option>
+                <option value="gda">GDA</option>
+                <option value="gac">GAC Member</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+              <div class="relative">
+                <input type="text" class="form-control pl-10" placeholder="Search by name or ID..." id="user-search">
+                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Employee ID</th>
+                <th>Position</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Last Active</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body">
+              <tr>
+                <td colspan="7" class="text-center py-8 text-gray-500">
+                  <i class="fas fa-users text-3xl mb-2 block text-gray-300"></i>
+                  No users found
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Connection Status Indicator -->
+  <div id="connection-status" style="display: none;">
+    <i class="fas fa-wifi"></i>
+    <span>Connecting...</span>
+  </div>
+
+  <!-- Modals -->
+  <div id="modal-container"></div>
+
+  <!-- Template for Modal -->
+  <template id="modal-template">
+    <div class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3><i class="fas fa-info-circle"></i> <span id="modal-title">Modal Title</span></h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body" id="modal-body">
+          Modal content goes here.
+        </div>
+        <div class="modal-footer" id="modal-footer">
+          <button class="btn btn-secondary modal-close">Cancel</button>
+          <button class="btn btn-primary" id="modal-primary-btn">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <!-- Gift Detail Modal Template -->
+  <template id="gift-detail-template">
+    <div class="modal">
+      <div class="modal-content" style="max-width: 900px;">
+        <div class="modal-header">
+          <h3><i class="fas fa-gift"></i> Gift Details - <span id="gift-detail-id">GDMS-2025-001</span></h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+              <div class="form-group">
+                <label class="form-label">Declarant</label>
+                <input type="text" class="form-control" id="detail-declarant" readonly>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Date Received</label>
+                <input type="text" class="form-control" id="detail-date" readonly>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" id="detail-description" rows="3" readonly></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Value</label>
+                <input type="text" class="form-control" id="detail-value" readonly>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Source/Donor</label>
+                <input type="text" class="form-control" id="detail-source" readonly>
+              </div>
+            </div>
+            <div>
+              <div class="form-group">
+                <label class="form-label">Gift Photos</label>
+                <div class="gift-images" id="detail-gift-images">
+                  <!-- Photos will be loaded here -->
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Current Status</label>
+                <div id="detail-status-badge" class="status-badge">Pending</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Review History</label>
+                <div class="space-y-2" id="detail-review-history">
+                  <!-- Review history will be loaded here -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary modal-close">Close</button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    // Application state
+    const appState = {
+      currentUser: null,
+      currentRole: null,
+      currentPage: 'dashboard',
+      isOnline: true,
+      declarations: [],
+      users: [],
+      uploadedFiles: []
+    };
+
+    // Mock data for demonstration
+    const mockData = {
+      currentUser: {
+        name: "Tashi Sherpa",
+        role: "public",
+        agency: "Ministry of Finance",
+        employeeId: "MOF/2021/001",
+        avatar: "TS",
+        position: "Finance Officer"
+      },
+      declarations: [],
+      users: [
+        {
+          name: "Tashi Sherpa",
+          role: "public",
+          status: "active",
+          employeeId: "MOF/2021/001",
+          position: "Finance Officer"
+        },
+        {
+          name: "Dorji Wangchuk",
+          role: "gda",
+          status: "active",
+          employeeId: "MOF/2020/005",
+          position: "Deputy Director"
+        },
+        {
+          name: "Pema Lhamo",
+          role: "hoa",
+          status: "active",
+          employeeId: "MOF/2015/001",
+          position: "Director"
+        },
+        {
+          name: "Karma Dorji",
+          role: "gac",
+          status: "active",
+          employeeId: "MOF/2018/003",
+          position: "Senior Officer"
+        }
+      ]
+    };
+
+    // Initialize the application
+    document.addEventListener('DOMContentLoaded', function() {
+      initializeApp();
+    });
+
+    function initializeApp() {
+      // Simulate authentication check
+      setTimeout(() => {
+        // For demo, use mock user data
+        appState.currentUser = mockData.currentUser;
+        appState.currentRole = mockData.currentUser.role;
+        
+        // Hide loading screen
+        document.getElementById('loading-screen').style.opacity = '0';
+        setTimeout(() => {
+          document.getElementById('loading-screen').style.display = 'none';
+          
+          // Show UI elements
+          document.getElementById('user-info-bar').style.display = 'flex';
+          document.getElementById('main-header').style.display = 'block';
+          document.getElementById('main-navigation').style.display = 'block';
+          document.getElementById('main-content').style.display = 'block';
+          
+          // Update user info
+          updateUserInfo();
+          
+          // Show appropriate dashboard
+          showDashboardForRole(appState.currentRole);
+          
+          // Initialize navigation
+          initializeNavigation();
+          
+          // Initialize file upload
+          initializeFileUpload();
+          
+          // Initialize connection status
+          initializeConnectionStatus();
+          
+          // Load initial data
+          loadInitialData();
+          
+          // Update role-specific UI
+          updateRoleSpecificUI();
+        }, 300);
+      }, 1500);
+    }
+
+    function updateUserInfo() {
+      const user = appState.currentUser;
+      document.getElementById('user-name').textContent = user.name;
+      document.getElementById('header-user-name').textContent = user.name;
+      
+      // Set role badge
+      const roleBadge = getRoleBadge(user.role);
+      document.getElementById('user-role').innerHTML = roleBadge;
+      document.getElementById('header-user-role').textContent = getRoleName(user.role);
+      
+      // Set agency
+      document.getElementById('user-agency').textContent = user.agency;
+      
+      // Set avatar
+      document.getElementById('header-avatar').textContent = user.avatar;
+      document.querySelector('.user-avatar').textContent = user.avatar.charAt(0);
+    }
+
+    function getRoleBadge(role) {
+      const badges = {
+        'hoa': '<span class="role-badge role-hoa">Head of Agency</span>',
+        'gda': '<span class="role-badge role-gda">Gift Disclosure Administrator</span>',
+        'gac': '<span class="role-badge role-gac-member">GAC Member</span>',
+        'public': '<span class="role-badge role-public-servant">Public Servant</span>'
+      };
+      return badges[role] || '<span class="role-badge">Unknown</span>';
+    }
+
+    function getRoleName(role) {
+      const names = {
+        'hoa': 'Head of Agency',
+        'gda': 'Gift Disclosure Administrator',
+        'gac': 'GAC Member',
+        'public': 'Public Servant'
+      };
+      return names[role] || 'Unknown';
+    }
+
+    function showDashboardForRole(role) {
+      // Hide all dashboards
+      document.querySelectorAll('.role-dashboard').forEach(dash => {
+        dash.style.display = 'none';
+      });
+      
+      // Show appropriate dashboard
+      const dashboardId = `${role}-dashboard`;
+      const dashboard = document.getElementById(dashboardId);
+      if (dashboard) {
+        dashboard.style.display = 'block';
+      }
+      
+      // Show/hide navigation tabs based on role
+      const manageUsersTab = document.querySelector('[data-page="users"]');
+      if (role === 'hoa' || role === 'gda') {
+        manageUsersTab.style.display = 'flex';
+      } else {
+        manageUsersTab.style.display = 'none';
+      }
+    }
+
+    function initializeNavigation() {
+      // Navigation tabs
+      document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.addEventListener('click', function(e) {
+          e.preventDefault();
+          const page = this.getAttribute('data-page');
+          navigateTo(page);
+        });
+      });
+      
+      // Logout button
+      document.getElementById('logout-button').addEventListener('click', function() {
+        if (confirm('Are you sure you want to logout?')) {
+          // Simulate logout
+          document.getElementById('loading-screen').style.display = 'flex';
+          document.getElementById('loading-screen').style.opacity = '1';
+          document.getElementById('loading-screen').querySelector('.loading-text').textContent = 'Logging out...';
+          
+          setTimeout(() => {
+            alert('Logged out successfully. In a real application, you would be redirected to login page.');
+            // For demo, just refresh
+            location.reload();
+          }, 1000);
+        }
+      });
+    }
+
+    function initializeFileUpload() {
+      const uploadArea = document.getElementById('file-upload-area');
+      const fileInput = document.getElementById('gift-photos');
+      const previewContainer = document.getElementById('file-preview-container');
+      
+      // Click to upload
+      uploadArea.addEventListener('click', () => fileInput.click());
+      
+      // File input change
+      fileInput.addEventListener('change', handleFileSelect);
+      
+      // Drag and drop
+      uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+      });
+      
+      uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+      });
+      
+      uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        handleFiles(files);
+      });
+    }
+
+    function handleFileSelect(e) {
+      const files = e.target.files;
+      handleFiles(files);
+    }
+
+    function handleFiles(files) {
+      const previewContainer = document.getElementById('file-preview-container');
+      const maxFiles = 5;
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      
+      // Clear previous files if needed
+      appState.uploadedFiles = [];
+      previewContainer.innerHTML = '';
+      
+      // Process each file
+      for (let i = 0; i < Math.min(files.length, maxFiles); i++) {
+        const file = files[i];
+        
+        // Validate file size
+        if (file.size > maxSize) {
+          showAlert(`File "${file.name}" is too large. Maximum size is 5MB.`, 'error');
+          continue;
+        }
+        
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+          showAlert(`File "${file.name}" is not an image.`, 'error');
+          continue;
+        }
+        
+        // Create preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const fileData = {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            dataUrl: e.target.result
+          };
+          
+          appState.uploadedFiles.push(fileData);
+          
+          // Create preview element
+          const previewItem = document.createElement('div');
+          previewItem.className = 'file-preview-item';
+          previewItem.innerHTML = `
+            <img src="${e.target.result}" alt="${file.name}">
+            <button class="remove-file" onclick="removeFile(${appState.uploadedFiles.length - 1})">
+              <i class="fas fa-times"></i>
+            </button>
+          `;
+          previewContainer.appendChild(previewItem);
+        };
+        reader.readAsDataURL(file);
+      }
+      
+      // Update file input
+      document.getElementById('gift-photos').value = '';
+    }
+
+    function removeFile(index) {
+      appState.uploadedFiles.splice(index, 1);
+      updateFilePreviews();
+    }
+
+    function updateFilePreviews() {
+      const previewContainer = document.getElementById('file-preview-container');
+      previewContainer.innerHTML = '';
+      
+      appState.uploadedFiles.forEach((file, index) => {
+        const previewItem = document.createElement('div');
+        previewItem.className = 'file-preview-item';
+        previewItem.innerHTML = `
+          <img src="${file.dataUrl}" alt="${file.name}">
+          <button class="remove-file" onclick="removeFile(${index})">
+            <i class="fas fa-times"></i>
+          </button>
+        `;
+        previewContainer.appendChild(previewItem);
+      });
+    }
+
+    function navigateTo(page) {
+      // Hide all pages
+      document.querySelectorAll('.page').forEach(p => {
+        p.classList.remove('active');
+      });
+      
+      // Show selected page
+      const targetPage = document.getElementById(page);
+      if (targetPage) {
+        targetPage.classList.add('active');
+        appState.currentPage = page;
+        
+        // Update active tab
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+          tab.classList.remove('active');
+          if (tab.getAttribute('data-page') === page) {
+            tab.classList.add('active');
+          }
+        });
+        
+        // Load page-specific content
+        loadPageContent(page);
+      }
+    }
+
+    function loadPageContent(page) {
+      switch(page) {
+        case 'declare':
+          loadDeclarePage();
+          break;
+        case 'my-gifts':
+          loadMyGiftsPage();
+          break;
+        case 'review':
+          loadReviewPage();
+          break;
+        case 'register':
+          loadRegisterPage();
+          break;
+        case 'penalties':
+          loadPenaltiesPage();
+          break;
+        case 'users':
+          loadUsersPage();
+          break;
+        default:
+          // Dashboard already loaded
+          break;
+      }
+    }
+
+    function loadDeclarePage() {
+      // Set today's date as default
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('gift-date').value = today;
+      document.getElementById('gift-date').max = today;
+      
+      // Update role-specific information
+      updateDeclarantRoleDisplay();
+      
+      // Form submission
+      const form = document.getElementById('gift-declaration-form');
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitGiftDeclaration();
+      });
+      
+      // Load recent declarations
+      loadRecentDeclarations();
+    }
+
+    function updateDeclarantRoleDisplay() {
+      const role = appState.currentRole;
+      const roleNames = {
+        'public': 'Public Official',
+        'gda': 'Gift Disclosure Administrator',
+        'hoa': 'Head of Agency',
+        'gac': 'GAC Member'
+      };
+      
+      document.getElementById('declarant-role-display').textContent = roleNames[role];
+      
+      // Update the review process message
+      const messages = {
+        'public': 'Your declaration will be reviewed by your agency\'s GDA within 5 working days.',
+        'gda': 'As GDA, your declaration will be reviewed by the Head of Agency to avoid conflict of interest.',
+        'hoa': 'As Head of Agency, your declaration requires review by the Gift Administration Committee (GAC) per Rule 21(a).',
+        'gac': 'Your declaration will be reviewed by the Head of Agency.'
+      };
+      
+      document.getElementById('role-specific-message').textContent = messages[role];
+      
+      // Update review process steps visibility
+      const step3 = document.getElementById('review-step-3');
+      if (role === 'hoa') {
+        step3.classList.remove('hidden');
+      } else {
+        step3.classList.add('hidden');
+      }
+    }
+
+    function submitGiftDeclaration() {
+      const form = document.getElementById('gift-declaration-form');
+      const user = appState.currentUser;
+      const role = appState.currentRole;
+      
+      // Basic validation
+      if (!document.getElementById('prohibited-check').checked) {
+        showAlert('You must confirm the gift is not from a prohibited source.', 'error');
+        return;
+      }
+      
+      // Check if gift date is within 24 hours
+      const giftDate = new Date(document.getElementById('gift-date').value);
+      const now = new Date();
+      const hoursDiff = (now - giftDate) / (1000 * 60 * 60);
+      
+      if (hoursDiff > 24) {
+        showAlert('Gift must be declared within 24 hours of receipt. This gift appears to be older than 24 hours.', 'warning');
+        // Ask for confirmation to proceed
+        if (!confirm('This gift is older than 24 hours. Late declaration may incur penalties. Proceed anyway?')) {
+          return;
+        }
+      }
+      
+      const newDeclaration = {
+        id: `GDMS-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+        date: document.getElementById('gift-date').value,
+        description: document.getElementById('gift-description').value,
+        value: parseFloat(document.getElementById('gift-value').value),
+        source: document.getElementById('gift-source').value,
+        category: document.getElementById('gift-category').value,
+        relationship: document.getElementById('donor-relationship').value,
+        occasion: document.getElementById('gift-occasion').value,
+        location: document.getElementById('gift-location').value,
+        status: 'pending',
+        photos: [...appState.uploadedFiles],
+        // Role-specific fields
+        declarantId: user.employeeId,
+        declarantName: user.name,
+        declarantRole: role,
+        declarantPosition: user.position,
+        agency: user.agency,
+        // Review path based on role
+        reviewPath: getReviewPathForRole(role),
+        timestamp: new Date().toISOString(),
+        reviewHistory: [{
+          date: new Date().toISOString(),
+          action: 'declared',
+          by: user.name,
+          role: role
+        }]
+      };
+      
+      // Special alert messages based on role
+      const roleMessages = {
+        'hoa': 'As Head of Agency, your gift declaration will be reviewed by the Gift Administration Committee (GAC) per Rule 21(a).',
+        'gda': 'As GDA, your declaration will be reviewed by the Head of Agency to avoid conflict of interest.',
+        'gac': 'As GAC member, your declaration follows standard review process.',
+        'public': 'Declaration submitted successfully! It will be reviewed within 5 working days.'
+      };
+      
+      showAlert(`Gift declaration submitted! ${roleMessages[role]}`, 'success');
+      
+      // Add to declarations
+      appState.declarations.push(newDeclaration);
+      
+      // Reset form
+      form.reset();
+      document.getElementById('gift-date').value = new Date().toISOString().split('T')[0];
+      appState.uploadedFiles = [];
+      updateFilePreviews();
+      
+      // Update dashboard stats
+      updateDashboardStats();
+      
+      // Load recent declarations
+      loadRecentDeclarations();
+    }
+
+    function getReviewPathForRole(role) {
+      const reviewPaths = {
+        'public': 'gda',           // Public → GDA review
+        'gda': 'hoa',              // GDA → HoA review (avoid self-review)
+        'hoa': 'gac',              // HoA → GAC review (Rule 21a)
+        'gac': 'hoa'               // GAC member → HoA review
+      };
+      return reviewPaths[role] || 'gda';
+    }
+
+    function showAlert(message, type) {
+      const container = document.getElementById('alert-container');
+      const alert = document.createElement('div');
+      alert.className = `alert alert-${type}`;
+      alert.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'exclamation-triangle'}"></i>
+        <span>${message}</span>
+      `;
+      
+      container.innerHTML = '';
+      container.appendChild(alert);
+      
+      // Auto remove after 5 seconds
+      setTimeout(() => {
+        alert.remove();
+      }, 5000);
+    }
+
+    function loadRecentDeclarations() {
+      const container = document.getElementById('recent-declarations-list');
+      const userDeclarations = appState.declarations.filter(
+        decl => decl.declarantId === appState.currentUser.employeeId
+      );
+      
+      if (userDeclarations.length === 0) {
+        container.innerHTML = '<li class="text-gray-500 text-sm">No recent declarations</li>';
+        return;
+      }
+      
+      // Show only last 3 declarations
+      const recentDeclarations = userDeclarations.slice(-3).reverse();
+      
+      container.innerHTML = recentDeclarations.map(decl => `
+        <li class="border-b pb-2 last:border-0">
+          <div class="flex justify-between">
+            <span class="font-medium text-sm">${decl.id}</span>
+            <span class="text-xs ${decl.status === 'pending' ? 'text-yellow-600' : 'text-green-600'}">${decl.status}</span>
+          </div>
+          <p class="text-xs text-gray-600 truncate">${decl.description}</p>
+          <p class="text-xs text-gray-500">Nu. ${decl.value.toLocaleString()} • ${decl.date}</p>
+        </li>
+      `).join('');
+    }
+
+    function loadMyGiftsPage() {
+      loadMyGifts('all');
+    }
+
+    function loadMyGifts(filter) {
+      const container = document.getElementById('my-gifts-table-body');
+      let userGifts = appState.declarations.filter(
+        gift => gift.declarantId === appState.currentUser.employeeId
+      );
+      
+      if (filter !== 'all') {
+        userGifts = userGifts.filter(gift => gift.status === filter);
+      }
+      
+      document.getElementById('total-gifts-count').textContent = userGifts.length;
+      
+      if (userGifts.length === 0) {
+        container.innerHTML = `
+          <tr>
+            <td colspan="8" class="text-center py-8 text-gray-500">
+              <i class="fas fa-gift text-3xl mb-2 block text-gray-300"></i>
+              No gift declarations found
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      // Reverse to show newest first
+      userGifts = userGifts.reverse();
+      
+      container.innerHTML = userGifts.map(gift => `
+        <tr>
+          <td class="font-medium">${gift.id}</td>
+          <td>${gift.date}</td>
+          <td>${gift.description}</td>
+          <td>Nu. ${gift.value.toLocaleString()}</td>
+          <td>
+            ${gift.photos && gift.photos.length > 0 ? 
+              `<span class="text-blue-600"><i class="fas fa-camera"></i> ${gift.photos.length}</span>` : 
+              `<span class="text-gray-400"><i class="fas fa-camera"></i> 0</span>`}
+          </td>
+          <td><span class="status-badge status-${gift.status}">${gift.status.charAt(0).toUpperCase() + gift.status.slice(1)}</span></td>
+          <td>${getReviewStage(gift)}</td>
+          <td>
+            <button class="text-blue-600 hover:text-blue-800" onclick="viewGiftDetails('${gift.id}')">
+              <i class="fas fa-eye"></i> View
+            </button>
+          </td>
+        </tr>
+      `).join('');
+      
+      // Update stats
+      document.getElementById('this-month-count').textContent = userGifts.length;
+      document.getElementById('this-month-bar').style.width = '100%';
+    }
+
+    function getReviewStage(gift) {
+      const reviewStages = {
+        'pending': 'Awaiting Review',
+        'under_review': 'Under Review',
+        'approved': 'Approved',
+        'returned': 'Returned',
+        'gac_review': 'GAC Review Required'
+      };
+      
+      if (gift.declarantRole === 'hoa' && gift.status === 'pending') {
+        return 'Awaiting GAC Review';
+      }
+      
+      return reviewStages[gift.status] || gift.status;
+    }
+
+    function viewGiftDetails(giftId) {
+      const gift = appState.declarations.find(g => g.id === giftId);
+      if (!gift) return;
+      
+      const template = document.getElementById('gift-detail-template');
+      const clone = template.content.cloneNode(true);
+      
+      const modal = clone.querySelector('.modal');
+      const closeBtn = modal.querySelector('.modal-close');
+      
+      // Populate gift details
+      modal.querySelector('#gift-detail-id').textContent = gift.id;
+      modal.querySelector('#detail-declarant').value = `${gift.declarantName} (${getRoleName(gift.declarantRole)})`;
+      modal.querySelector('#detail-date').value = gift.date;
+      modal.querySelector('#detail-description').value = gift.description;
+      modal.querySelector('#detail-value').value = `Nu. ${gift.value.toLocaleString()}`;
+      modal.querySelector('#detail-source').value = gift.source;
+      
+      // Update status badge
+      const statusBadge = modal.querySelector('#detail-status-badge');
+      statusBadge.className = `status-badge status-${gift.status}`;
+      statusBadge.textContent = gift.status.charAt(0).toUpperCase() + gift.status.slice(1);
+      
+      // Load photos
+      const photoContainer = modal.querySelector('#detail-gift-images');
+      if (gift.photos && gift.photos.length > 0) {
+        gift.photos.forEach((photo, index) => {
+          const imgDiv = document.createElement('div');
+          imgDiv.className = 'gift-image-item';
+          imgDiv.innerHTML = `<img src="${photo.dataUrl}" alt="Gift photo ${index + 1}">`;
+          photoContainer.appendChild(imgDiv);
+        });
+      } else {
+        photoContainer.innerHTML = '<p class="text-gray-500">No photos uploaded</p>';
+      }
+      
+      // Load review history
+      const historyContainer = modal.querySelector('#detail-review-history');
+      if (gift.reviewHistory && gift.reviewHistory.length > 0) {
+        gift.reviewHistory.forEach(entry => {
+          const historyItem = document.createElement('div');
+          historyItem.className = 'text-sm';
+          historyItem.innerHTML = `
+            <div class="flex justify-between">
+              <span class="font-medium">${entry.action}</span>
+              <span class="text-gray-500">${new Date(entry.date).toLocaleDateString()}</span>
+            </div>
+            <div class="text-gray-600">By: ${entry.by} (${entry.role})</div>
+          `;
+          historyContainer.appendChild(historyItem);
+        });
+      } else {
+        historyContainer.innerHTML = '<p class="text-gray-500">No review history</p>';
+      }
+      
+      closeBtn.addEventListener('click', () => {
+        modal.classList.remove('active');
+        setTimeout(() => modal.remove(), 300);
+      });
+      
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.remove('active');
+          setTimeout(() => modal.remove(), 300);
+        }
+      });
+      
+      document.getElementById('modal-container').appendChild(clone);
+      
+      setTimeout(() => {
+        modal.classList.add('active');
+      }, 10);
+    }
+
+    function loadReviewPage() {
+      const container = document.getElementById('review-content');
+      const role = appState.currentRole;
+      
+      if (role === 'gda') {
+        loadGDAReviewPage();
+      } else if (role === 'hoa') {
+        loadHoAReviewPage();
+      } else if (role === 'gac') {
+        loadGACReviewPage();
+      } else {
+        container.innerHTML = `
+          <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <i class="fas fa-exclamation-triangle text-red-500"></i>
+              </div>
+              <div class="ml-3">
+                <h3 class="text-sm font-medium text-red-800">Access Restricted</h3>
+                <div class="mt-2 text-sm text-red-700">
+                  <p>Only GDA, HoA, and GAC members can review gift declarations.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function loadGDAReviewPage() {
+      const container = document.getElementById('review-content');
+      
+      // Get gifts for GDA review (public officials only, not HoA or GDA's own gifts)
+      const reviewableGifts = appState.declarations.filter(gift => 
+        gift.status === 'pending' && 
+        gift.declarantRole === 'public' &&
+        gift.agency === appState.currentUser.agency
+      );
+      
+      container.innerHTML = `
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+          <div class="p-4 border-b">
+            <h3 class="font-bold text-gray-800">GDA Review Queue</h3>
+            <p class="text-sm text-gray-600">Rule 25: Review declarations within 5 working days</p>
+            <p class="text-sm text-gray-500 mt-1">
+              <i class="fas fa-info-circle"></i> You cannot review gifts from HoA (goes to GAC) or your own gifts.
+            </p>
+          </div>
+          
+          ${reviewableGifts.length > 0 ? `
+            <div class="overflow-x-auto">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Ref No.</th>
+                    <th>Date</th>
+                    <th>Declarant</th>
+                    <th>Description</th>
+                    <th>Value</th>
+                    <th>Photos</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${reviewableGifts.map(gift => `
+                    <tr>
+                      <td class="font-medium">${gift.id}</td>
+                      <td>${gift.date}</td>
+                      <td>${gift.declarantName}</td>
+                      <td>${gift.description}</td>
+                      <td>Nu. ${gift.value.toLocaleString()}</td>
+                      <td>
+                        ${gift.photos && gift.photos.length > 0 ? 
+                          `<span class="text-blue-600"><i class="fas fa-camera"></i> ${gift.photos.length}</span>` : 
+                          `<span class="text-gray-400"><i class="fas fa-camera"></i> 0</span>`}
+                      </td>
+                      <td>
+                        <button class="btn btn-primary btn-sm" onclick="reviewGift('${gift.id}')">
+                          <i class="fas fa-eye mr-1"></i> Review
+                        </button>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : `
+            <div class="p-6 text-center">
+              <i class="fas fa-clipboard-check text-4xl text-gray-300 mb-4"></i>
+              <p class="text-gray-500">No declarations pending review</p>
+              <p class="text-sm text-gray-400 mt-2">Declarations from public officials will appear here</p>
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    function loadHoAReviewPage() {
+      const container = document.getElementById('review-content');
+      
+      // Get gifts for HoA review (GDA-reviewed gifts and GAC member gifts, not HoA's own gifts)
+      const reviewableGifts = appState.declarations.filter(gift => 
+        gift.status === 'pending' && 
+        gift.declarantRole !== 'hoa' &&
+        gift.agency === appState.currentUser.agency &&
+        (gift.declarantRole === 'gda' || gift.declarantRole === 'gac' || gift.reviewPath === 'hoa')
+      );
+      
+      container.innerHTML = `
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+          <div class="p-4 border-b">
+            <h3 class="font-bold text-gray-800">HoA Decision Queue</h3>
+            <p class="text-sm text-gray-600">Rule 19: Make final decisions on gift retention</p>
+            <p class="text-sm text-gray-500 mt-1">
+              <i class="fas fa-info-circle"></i> Your own gifts go to GAC for review per Rule 21(a).
+            </p>
+          </div>
+          
+          ${reviewableGifts.length > 0 ? `
+            <div class="overflow-x-auto">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Ref No.</th>
+                    <th>Date</th>
+                    <th>Declarant</th>
+                    <th>Role</th>
+                    <th>Description</th>
+                    <th>Value</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${reviewableGifts.map(gift => `
+                    <tr>
+                      <td class="font-medium">${gift.id}</td>
+                      <td>${gift.date}</td>
+                      <td>${gift.declarantName}</td>
+                      <td>${getRoleName(gift.declarantRole)}</td>
+                      <td>${gift.description}</td>
+                      <td>Nu. ${gift.value.toLocaleString()}</td>
+                      <td>
+                        <button class="btn btn-primary btn-sm" onclick="reviewGift('${gift.id}')">
+                          <i class="fas fa-gavel mr-1"></i> Decide
+                        </button>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : `
+            <div class="p-6 text-center">
+              <i class="fas fa-gavel text-4xl text-gray-300 mb-4"></i>
+              <p class="text-gray-500">No decisions pending</p>
+              <p class="text-sm text-gray-400 mt-2">Gifts requiring HoA decision will appear here after GDA review</p>
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    function loadGACReviewPage() {
+      const container = document.getElementById('review-content');
+      
+      // Get HoA gifts for GAC review
+      const reviewableGifts = appState.declarations.filter(gift => 
+        gift.status === 'pending' && 
+        gift.declarantRole === 'hoa' &&
+        gift.agency === appState.currentUser.agency
+      );
+      
+      container.innerHTML = `
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+          <div class="p-4 border-b">
+            <h3 class="font-bold text-gray-800">GAC Review Queue (HoA Gifts)</h3>
+            <p class="text-sm text-gray-600">Rule 21(a): Committee review required for HoA gifts</p>
+          </div>
+          
+          ${reviewableGifts.length > 0 ? `
+            <div class="overflow-x-auto">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Ref No.</th>
+                    <th>Date</th>
+                    <th>Declarant</th>
+                    <th>Description</th>
+                    <th>Value</th>
+                    <th>Photos</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${reviewableGifts.map(gift => `
+                    <tr>
+                      <td class="font-medium">${gift.id}</td>
+                      <td>${gift.date}</td>
+                      <td>${gift.declarantName} (HoA)</td>
+                      <td>${gift.description}</td>
+                      <td>Nu. ${gift.value.toLocaleString()}</td>
+                      <td>
+                        ${gift.photos && gift.photos.length > 0 ? 
+                          `<span class="text-blue-600"><i class="fas fa-camera"></i> ${gift.photos.length}</span>` : 
+                          `<span class="text-gray-400"><i class="fas fa-camera"></i> 0</span>`}
+                      </td>
+                      <td>
+                        <button class="btn btn-primary btn-sm" onclick="reviewGift('${gift.id}')">
+                          <i class="fas fa-users mr-1"></i> Committee Review
+                        </button>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : `
+            <div class="p-6 text-center">
+              <i class="fas fa-users text-4xl text-gray-300 mb-4"></i>
+              <p class="text-gray-500">No HoA gifts pending review</p>
+              <p class="text-sm text-gray-400 mt-2">HoA gift declarations will appear here</p>
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    function reviewGift(giftId) {
+      showModal('Review Gift', `Reviewing gift ${giftId}. In a full implementation, this would open a detailed review interface.`);
+    }
+
+    function updateRoleSpecificUI() {
+      const role = appState.currentRole;
+      
+      // Update dashboard stats based on role
+      updateDashboardStats();
+      
+      // Update review page info
+      const reviewInfo = document.getElementById('review-role-info');
+      const infoTexts = {
+        'public': 'You do not have permission to review gifts.',
+        'gda': 'Review gifts declared by public officials in your agency.',
+        'hoa': 'Make final decisions on gift retention for your agency.',
+        'gac': 'Review gifts declared by the Head of Agency (Rule 21a).'
+      };
+      reviewInfo.textContent = infoTexts[role] || '';
+    }
+
+    function updateDashboardStats() {
+      const userDeclarations = appState.declarations.filter(
+        decl => decl.declarantId === appState.currentUser.employeeId
+      );
+      
+      const pending = userDeclarations.filter(d => d.status === 'pending').length;
+      const approved = userDeclarations.filter(d => d.status === 'approved').length;
+      const returned = userDeclarations.filter(d => d.status === 'returned').length;
+      const total = userDeclarations.length;
+      
+      // Update all role dashboards
+      document.querySelectorAll('[id$="-personal-declarations"]').forEach(el => {
+        if (el.id.includes(appState.currentRole)) {
+          el.textContent = total;
+        }
+      });
+      
+      // Update public servant stats
+      document.getElementById('ps-total-declarations').textContent = total;
+      document.getElementById('ps-pending-count').textContent = pending;
+      document.getElementById('ps-approved-count').textContent = approved;
+      document.getElementById('ps-returned-count').textContent = returned;
+      
+      // Update GDA stats
+      if (appState.currentRole === 'gda') {
+        const pendingReviews = appState.declarations.filter(gift => 
+          gift.status === 'pending' && 
+          gift.declarantRole === 'public' &&
+          gift.agency === appState.currentUser.agency
+        ).length;
+        document.getElementById('gda-pending-count').textContent = pendingReviews;
+      }
+      
+      // Update HoA stats
+      if (appState.currentRole === 'hoa') {
+        const pendingDecisions = appState.declarations.filter(gift => 
+          gift.status === 'pending' && 
+          gift.declarantRole !== 'hoa' &&
+          gift.agency === appState.currentUser.agency &&
+          (gift.declarantRole === 'gda' || gift.declarantRole === 'gac' || gift.reviewPath === 'hoa')
+        ).length;
+        document.getElementById('hoa-pending-decisions').textContent = pendingDecisions;
+      }
+      
+      // Update GAC stats
+      if (appState.currentRole === 'gac') {
+        const hoaPending = appState.declarations.filter(gift => 
+          gift.status === 'pending' && 
+          gift.declarantRole === 'hoa' &&
+          gift.agency === appState.currentUser.agency
+        ).length;
+        document.getElementById('gac-hoa-pending').textContent = hoaPending;
+      }
+    }
+
+    function loadRegisterPage() {
+      // For now, just show empty state
+      // In a real app, this would fetch data from API
+    }
+
+    function loadPenaltiesPage() {
+      // For now, just show empty state
+      // In a real app, this would fetch data from API
+    }
+
+    function loadUsersPage() {
+      const role = appState.currentRole;
+      
+      if (role !== 'hoa' && role !== 'gda') {
+        document.getElementById('users').innerHTML = `
+          <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+            <h3 class="text-lg font-bold text-red-800">Access Denied</h3>
+            <p class="text-red-700">Only Head of Agency and GDA can access user management.</p>
+            <button class="mt-4 btn btn-secondary" onclick="navigateTo('dashboard')">
+              Return to Dashboard
+            </button>
+          </div>
+        `;
+        return;
+      }
+      
+      // Load users table
+      loadUsersTable();
+    }
+
+    function loadUsersTable() {
+      const container = document.getElementById('users-table-body');
+      const users = mockData.users.filter(u => u.agency === appState.currentUser.agency);
+      
+      document.getElementById('active-users-count').textContent = 
+        users.filter(u => u.status === 'active').length;
+      document.getElementById('pending-users-count').textContent = 
+        users.filter(u => u.status === 'pending').length;
+      
+      container.innerHTML = users.map(user => `
+        <tr>
+          <td class="font-medium">${user.name}</td>
+          <td>${user.employeeId}</td>
+          <td>${user.position}</td>
+          <td>${getRoleName(user.role)}</td>
+          <td><span class="status-badge status-${user.status}">${user.status.charAt(0).toUpperCase() + user.status.slice(1)}</span></td>
+          <td class="text-sm text-gray-500">Today</td>
+          <td>
+            <button class="text-blue-600 hover:text-blue-800 mr-2">
+              <i class="fas fa-eye"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function loadInitialData() {
+      // Load user's recent declarations
+      loadRecentDeclarations();
+      
+      // Update dashboard stats
+      updateDashboardStats();
+    }
+
+    function initializeConnectionStatus() {
+      const statusEl = document.getElementById('connection-status');
+      statusEl.style.display = 'flex';
+      
+      // Simulate connection check
+      setTimeout(() => {
+        statusEl.innerHTML = '<i class="fas fa-wifi"></i> <span>Connected</span>';
+        statusEl.style.background = '#d4edda';
+        statusEl.style.color = '#155724';
+        statusEl.style.borderColor = '#c3e6cb';
+      }, 2000);
+    }
+
+    function showModal(title, content) {
+      const template = document.getElementById('modal-template');
+      const clone = template.content.cloneNode(true);
+      
+      clone.querySelector('#modal-title').textContent = title;
+      clone.querySelector('#modal-body').innerHTML = `<p>${content}</p>`;
+      
+      const modal = clone.querySelector('.modal');
+      const closeBtn = modal.querySelector('.modal-close');
+      const primaryBtn = modal.querySelector('#modal-primary-btn');
+      
+      closeBtn.addEventListener('click', () => {
+        modal.classList.remove('active');
+        setTimeout(() => modal.remove(), 300);
+      });
+      
+      primaryBtn.addEventListener('click', () => {
+        alert(`Action confirmed: ${title}`);
+        modal.classList.remove('active');
+        setTimeout(() => modal.remove(), 300);
+      });
+      
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.remove('active');
+          setTimeout(() => modal.remove(), 300);
+        }
+      });
+      
+      document.getElementById('modal-container').appendChild(clone);
+      
+      setTimeout(() => {
+        modal.classList.add('active');
+      }, 10);
+    }
+
+    // Expose functions to global scope for HTML onclick attributes
+    window.navigateTo = navigateTo;
+    window.showModal = showModal;
+    window.loadMyGifts = loadMyGifts;
+    window.viewGiftDetails = viewGiftDetails;
+    window.removeFile = removeFile;
+    window.reviewGift = reviewGift;
+  </script>
 </body>
 </html>
