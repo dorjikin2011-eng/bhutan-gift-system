@@ -15,15 +15,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public')); // Serves HTML/CSS/JS
 
-// Fix for favicon.ico 500 error
+// Fix favicon issue
 app.get('/favicon.ico', (req, res) => {
-  res.status(204).end(); // Return "No Content" instead of crashing
+  res.status(204).end(); // No Content
 });
-
-// OR if you want to serve a real favicon:
-// app.get('/favicon.ico', (req, res) => {
-//   res.sendFile(path.join(__dirname, 'public', 'favicon.ico'));
-// });
 
 // Data directory
 const DATA_DIR = path.join(__dirname, 'data');
@@ -139,9 +134,14 @@ async function fileExists(filePath) {
 
 // Auth: Mock login
 async function authenticate(email, password) {
-  const usersData = await fs.readFile(USERS_FILE, 'utf8');
-  const users = JSON.parse(usersData);
-  return users.find(u => u.email === email && u.password === password);
+  try {
+    const usersData = await fs.readFile(USERS_FILE, 'utf8');
+    const users = JSON.parse(usersData);
+    return users.find(u => u.email === email && u.password === password);
+  } catch (error) {
+    console.error('Auth error:', error);
+    return null;
+  }
 }
 
 // Middleware: Require auth
@@ -166,13 +166,14 @@ async function requireAuth(req, res, next) {
     req.user = user;
     next();
   } catch (err) {
+    console.error('Auth middleware error:', err);
     res.status(401).json({ success: false, error: 'Invalid token' });
   }
 }
 
 // Middleware: Require ACC Admin
-async function requireAccAdmin(req, res, next) {
-  await requireAuth(req, res, () => {
+function requireAccAdmin(req, res, next) {
+  requireAuth(req, res, () => {
     if (req.user.role === 'acc-admin') {
       next();
     } else {
@@ -182,8 +183,8 @@ async function requireAccAdmin(req, res, next) {
 }
 
 // Middleware: Agency-scoped access
-async function requireAgencyAccess(req, res, next) {
-  await requireAuth(req, res, () => {
+function requireAgencyAccess(req, res, next) {
+  requireAuth(req, res, () => {
     // ACC Admin sees all
     if (req.user.role === 'acc-admin') {
       return next();
@@ -207,117 +208,150 @@ app.get('/api/health', (req, res) => {
 
 // 🔐 Login
 app.post('/api/login', async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ success: false, error: 'Email and password required' });
-  }
-
-  const user = await authenticate(email, password);
-  if (!user) {
-    return res.status(401).json({ success: false, error: 'Invalid credentials' });
-  }
-
-  // Generate mock token (in prod: JWT)
-  const token = `gdms_${user.id}_${Date.now()}`;
-  res.json({
-    success: true,
-    token: token,
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      agency_id: user.agency_id,
-      agency_name: user.agency_name,
-      role: user.role
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ success: false, error: 'Email and password required' });
     }
-  });
+
+    const user = await authenticate(email, password);
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Invalid credentials' });
+    }
+
+    // Generate mock token (in prod: JWT)
+    const token = `gdms_${user.id}_${Date.now()}`;
+    res.json({
+      success: true,
+      token: token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        agency_id: user.agency_id,
+        agency_name: user.agency_name,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
 });
 
 // 🔐 Get current user
 app.get('/api/auth/me', requireAuth, (req, res) => {
-  const { password, ...safeUser } = req.user;
-  res.json({ success: true, user: safeUser });
+  try {
+    const { password, ...safeUser } = req.user;
+    res.json({ success: true, user: safeUser });
+  } catch (error) {
+    console.error('Get user error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
 });
 
 // 📦 Get gifts (scoped)
 app.get('/api/gifts', requireAgencyAccess, async (req, res) => {
-  const giftsData = await fs.readFile(GIFTS_FILE, 'utf8');
-  const gifts = JSON.parse(giftsData);
-  
-  let filtered = gifts;
-  if (req.user.role !== 'acc-admin') {
-    filtered = gifts.filter(g => g.agency_id === req.user.agency_id);
-  }
-  if (req.user.role === 'public-servant') {
-    filtered = filtered.filter(g => g.declarant_id === req.user.id);
-  }
+  try {
+    const giftsData = await fs.readFile(GIFTS_FILE, 'utf8');
+    const gifts = JSON.parse(giftsData);
+    
+    let filtered = gifts;
+    if (req.user.role !== 'acc-admin') {
+      filtered = gifts.filter(g => g.agency_id === req.user.agency_id);
+    }
+    if (req.user.role === 'public-servant') {
+      filtered = filtered.filter(g => g.declarant_id === req.user.id);
+    }
 
-  res.json({ success: true, data: filtered });
+    res.json({ success: true, data: filtered });
+  } catch (error) {
+    console.error('Get gifts error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
 });
 
 // ➕ Declare gift
 app.post('/api/gifts', requireAgencyAccess, async (req, res) => {
-  const { description, value, date_received, giver, relationship } = req.body;
-  
-  if (!description || !value || !giver) {
-    return res.status(400).json({ success: false, error: 'Required fields missing' });
+  try {
+    const { description, value, date_received, giver, relationship } = req.body;
+    
+    if (!description || !value || !giver) {
+      return res.status(400).json({ success: false, error: 'Required fields missing' });
+    }
+
+    const giftsData = await fs.readFile(GIFTS_FILE, 'utf8');
+    const gifts = JSON.parse(giftsData);
+
+    const newGift = {
+      id: `GIFT-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`,
+      agency_id: req.user.agency_id,
+      declarant_id: req.user.id,
+      description,
+      value: parseFloat(value),
+      date_received: date_received || new Date().toISOString().split('T')[0],
+      giver,
+      relationship: relationship || 'other',
+      status: 'submitted',
+      created_at: new Date().toISOString()
+    };
+
+    gifts.push(newGift);
+    await fs.writeFile(GIFTS_FILE, JSON.stringify(gifts, null, 2));
+
+    res.json({
+      success: true,
+      data: newGift,
+      reference: newGift.id
+    });
+  } catch (error) {
+    console.error('Declare gift error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
   }
-
-  const giftsData = await fs.readFile(GIFTS_FILE, 'utf8');
-  const gifts = JSON.parse(giftsData);
-
-  const newGift = {
-    id: `GIFT-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`,
-    agency_id: req.user.agency_id,
-    declarant_id: req.user.id,
-    description,
-    value: parseFloat(value),
-    date_received: date_received || new Date().toISOString().split('T')[0],
-    giver,
-    relationship: relationship || 'other',
-    status: 'submitted',
-    created_at: new Date().toISOString()
-  };
-
-  gifts.push(newGift);
-  await fs.writeFile(GIFTS_FILE, JSON.stringify(gifts, null, 2));
-
-  res.json({
-    success: true,
-    data: newGift,
-    reference: newGift.id
-  });
 });
 
 // ⚖️ Penalty rules
 app.get('/api/penalties', requireAuth, (req, res) => {
-  res.json({
-    success: true,
-    data: [
-      { breach: 1, multiplier: 2, rule: 'Rule 37(a)' },
-      { breach: 2, multiplier: 5, rule: 'Rule 37(b)' },
-      { breach: 3, multiplier: 10, rule: 'Rule 37(c)' }
-    ]
-  });
+  try {
+    res.json({
+      success: true,
+      data: [
+        { breach: 1, multiplier: 2, rule: 'Rule 37(a)' },
+        { breach: 2, multiplier: 5, rule: 'Rule 37(b)' },
+        { breach: 3, multiplier: 10, rule: 'Rule 37(c)' }
+      ]
+    });
+  } catch (error) {
+    console.error('Get penalties error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
 });
 
 // 📊 ACC: National overview
 app.get('/api/acc/overview', requireAccAdmin, async (req, res) => {
-  const agenciesData = await fs.readFile(AGENCIES_FILE, 'utf8');
-  const giftsData = await fs.readFile(GIFTS_FILE, 'utf8');
-  const agencies = JSON.parse(agenciesData);
-  const gifts = JSON.parse(giftsData);
-  
-  res.json({
-    success: true,
-    data: {
-      totalAgencies: agencies.length,
-      activeAgencies: agencies.filter(a => a.active).length,
-      totalDeclarations: gifts.length,
-      pendingReviews: gifts.filter(g => g.status === 'pending').length,
-      nationalCompliance: 84
-    }
-  });
+  try {
+    const [agenciesData, giftsData] = await Promise.all([
+      fs.readFile(AGENCIES_FILE, 'utf8'),
+      fs.readFile(GIFTS_FILE, 'utf8')
+    ]);
+    
+    const agencies = JSON.parse(agenciesData);
+    const gifts = JSON.parse(giftsData);
+    
+    res.json({
+      success: true,
+      data: {
+        totalAgencies: agencies.length,
+        activeAgencies: agencies.filter(a => a.active).length,
+        totalDeclarations: gifts.length,
+        pendingReviews: gifts.filter(g => g.status === 'pending').length,
+        nationalCompliance: 84
+      }
+    });
+  } catch (error) {
+    console.error('ACC overview error:', error);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
 });
 
 // 🖥️ Serve frontend
@@ -338,13 +372,24 @@ app.use('*', (req, res) => {
   res.status(404).json({ success: false, error: 'Not found' });
 });
 
-// Start server
-initStorage().then(() => {
-  app.listen(PORT, () => {
-    console.log(`✅ GDMS Server running on http://localhost:${PORT}`);
-    console.log(`🔗 API: http://localhost:${PORT}/api/health`);
-    console.log(`📝 Demo: acc.admin@acc.gov.bt / password123`);
-  });
-}).catch(err => {
-  console.error('❌ Server startup failed:', err);
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ success: false, error: 'Internal server error' });
 });
+
+// Export for Vercel
+module.exports = app;
+
+// Start server (only for local development)
+if (require.main === module) {
+  initStorage().then(() => {
+    app.listen(PORT, () => {
+      console.log(`✅ GDMS Server running on http://localhost:${PORT}`);
+      console.log(`🔗 API: http://localhost:${PORT}/api/health`);
+      console.log(`📝 Demo: acc.admin@acc.gov.bt / password123`);
+    });
+  }).catch(err => {
+    console.error('❌ Server startup failed:', err);
+  });
+}
