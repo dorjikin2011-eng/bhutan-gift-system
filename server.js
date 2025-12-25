@@ -206,6 +206,15 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// 🔐 Debug endpoint - check if auth works
+app.get('/api/debug-auth', requireAuth, (req, res) => {
+  res.json({
+    success: true,
+    user: req.user,
+    message: 'Authentication successful'
+  });
+});
+
 // 🔐 Login
 app.post('/api/login', async (req, res) => {
   try {
@@ -356,7 +365,7 @@ app.get('/api/acc/overview', requireAccAdmin, async (req, res) => {
 
 // 🖥️ Serve frontend HTML pages
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.redirect('/login'); // Redirect to login page
 });
 
 app.get('/login', (req, res) => {
