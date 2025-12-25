@@ -15,6 +15,16 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public')); // Serves HTML/CSS/JS
 
+// Fix for favicon.ico 500 error
+app.get('/favicon.ico', (req, res) => {
+  res.status(204).end(); // Return "No Content" instead of crashing
+});
+
+// OR if you want to serve a real favicon:
+// app.get('/favicon.ico', (req, res) => {
+//   res.sendFile(path.join(__dirname, 'public', 'favicon.ico'));
+// });
+
 // Data directory
 const DATA_DIR = path.join(__dirname, 'data');
 const AGENCIES_FILE = path.join(DATA_DIR, 'agencies.json');
