@@ -354,7 +354,7 @@ app.get('/api/acc/overview', requireAccAdmin, async (req, res) => {
   }
 });
 
-// 🖥️ Serve frontend
+// 🖥️ Serve frontend HTML pages
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -363,11 +363,32 @@ app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
+// ACC Dashboard - ACC Admin only
 app.get('/acc-dashboard.html', requireAccAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'acc-dashboard.html'));
 });
 
-// 404
+// Agency Admin Dashboard (GAC)
+app.get('/gac.html', requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'gac.html'));
+});
+
+// Gift Disclosure Administrator
+app.get('/gda.html', requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'gda.html'));
+});
+
+// Head of Agency
+app.get('/hoa.html', requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'hoa.html'));
+});
+
+// Public Official Dashboard
+app.get('/public-official.html', requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'public-official.html'));
+});
+
+// 404 handler should be LAST
 app.use('*', (req, res) => {
   res.status(404).json({ success: false, error: 'Not found' });
 });
