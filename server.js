@@ -128,13 +128,14 @@ async function fileExists(filePath) {
 }
 
 // Auth: Mock login
-function authenticate(email, password) {
-  const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+async function authenticate(email, password) {
+  const usersData = await fs.readFile(USERS_FILE, 'utf8');
+  const users = JSON.parse(usersData);
   return users.find(u => u.email === email && u.password === password);
 }
 
 // Middleware: Require auth
-function requireAuth(req, res, next) {
+async function requireAuth(req, res, next) {
   const auth = req.headers.authorization;
   if (!auth || !auth.startsWith('Bearer ')) {
     return res.status(401).json({ success: false, error: 'Unauthorized' });
@@ -148,7 +149,8 @@ function requireAuth(req, res, next) {
       throw new Error('Invalid token format');
     }
     const userId = parts[1];
-    const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+    const usersData = await fs.readFile(USERS_FILE, 'utf8');
+    const users = JSON.parse(usersData);
     const user = users.find(u => u.id === userId);
     if (!user) throw new Error('User not found');
     req.user = user;
@@ -159,8 +161,8 @@ function requireAuth(req, res, next) {
 }
 
 // Middleware: Require ACC Admin
-function requireAccAdmin(req, res, next) {
-  requireAuth(req, res, () => {
+async function requireAccAdmin(req, res, next) {
+  await requireAuth(req, res, () => {
     if (req.user.role === 'acc-admin') {
       next();
     } else {
@@ -170,8 +172,8 @@ function requireAccAdmin(req, res, next) {
 }
 
 // Middleware: Agency-scoped access
-function requireAgencyAccess(req, res, next) {
-  requireAuth(req, res, () => {
+async function requireAgencyAccess(req, res, next) {
+  await requireAuth(req, res, () => {
     // ACC Admin sees all
     if (req.user.role === 'acc-admin') {
       return next();
@@ -194,13 +196,13 @@ app.get('/api/health', (req, res) => {
 });
 
 // 🔐 Login
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ success: false, error: 'Email and password required' });
   }
 
-  const user = authenticate(email, password);
+  const user = await authenticate(email, password);
   if (!user) {
     return res.status(401).json({ success: false, error: 'Invalid credentials' });
   }
@@ -228,8 +230,9 @@ app.get('/api/auth/me', requireAuth, (req, res) => {
 });
 
 // 📦 Get gifts (scoped)
-app.get('/api/gifts', requireAgencyAccess, (req, res) => {
-  const gifts = JSON.parse(fs.readFileSync(GIFTS_FILE, 'utf8'));
+app.get('/api/gifts', requireAgencyAccess, async (req, res) => {
+  const giftsData = await fs.readFile(GIFTS_FILE, 'utf8');
+  const gifts = JSON.parse(giftsData);
   
   let filtered = gifts;
   if (req.user.role !== 'acc-admin') {
@@ -243,12 +246,15 @@ app.get('/api/gifts', requireAgencyAccess, (req, res) => {
 });
 
 // ➕ Declare gift
-app.post('/api/gifts', requireAgencyAccess, (req, res) => {
+app.post('/api/gifts', requireAgencyAccess, async (req, res) => {
   const { description, value, date_received, giver, relationship } = req.body;
   
   if (!description || !value || !giver) {
     return res.status(400).json({ success: false, error: 'Required fields missing' });
   }
+
+  const giftsData = await fs.readFile(GIFTS_FILE, 'utf8');
+  const gifts = JSON.parse(giftsData);
 
   const newGift = {
     id: `GIFT-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`,
@@ -263,9 +269,8 @@ app.post('/api/gifts', requireAgencyAccess, (req, res) => {
     created_at: new Date().toISOString()
   };
 
-  const gifts = JSON.parse(fs.readFileSync(GIFTS_FILE, 'utf8'));
   gifts.push(newGift);
-  fs.writeFileSync(GIFTS_FILE, JSON.stringify(gifts, null, 2));
+  await fs.writeFile(GIFTS_FILE, JSON.stringify(gifts, null, 2));
 
   res.json({
     success: true,
@@ -287,9 +292,11 @@ app.get('/api/penalties', requireAuth, (req, res) => {
 });
 
 // 📊 ACC: National overview
-app.get('/api/acc/overview', requireAccAdmin, (req, res) => {
-  const agencies = JSON.parse(fs.readFileSync(AGENCIES_FILE, 'utf8'));
-  const gifts = JSON.parse(fs.readFileSync(GIFTS_FILE, 'utf8'));
+app.get('/api/acc/overview', requireAccAdmin, async (req, res) => {
+  const agenciesData = await fs.readFile(AGENCIES_FILE, 'utf8');
+  const giftsData = await fs.readFile(GIFTS_FILE, 'utf8');
+  const agencies = JSON.parse(agenciesData);
+  const gifts = JSON.parse(giftsData);
   
   res.json({
     success: true,
